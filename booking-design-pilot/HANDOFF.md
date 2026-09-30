@@ -1,13 +1,14 @@
 # Kindred booking concept — developer handoff
 
-Updated 30 September 2026. Delivery: design prototype for review and implementation planning. Buyer/developer acceptance remains pending.
+Updated 1 October 2026. Delivery: design prototype for review and implementation planning. Buyer/developer acceptance remains pending.
 
 ## Start here
 
 - Live concept: https://booking-design-pilot-production.up.railway.app/
 - Draft PR: https://github.com/sivica/sandbox/pull/1
 - Published source baseline: `1d25ab1668513275a896b844f38a4a9debd9f07d`, folder `booking-design-pilot/`.
-- This revision publishes the corrected documentation and selected verification evidence alongside the unchanged prototype.
+- Latest source adds browser tests, error-focus timing correction, semantic progress markup and relative text sizes. Railway deployment remains the earlier baseline until separately verified.
+- Start with `STATUS.md` for completed and remaining work; `AUTOMATION.md` explains repeatable tests.
 - Read `VERIFICATION.md`, `ACCEPTANCE.md` and `DEPLOYMENT.md` in this source folder.
 
 ## Scope
@@ -58,7 +59,7 @@ The version switch compares a constructed illustrative draft with the reviewed l
 
 Browser regression checks at 360px and 390px covered the five screens, pending control lock, validated confirmation, native email rejection, first-invalid-field focus, failure/retry and unavailable recovery. Android API 36 Chrome emulator checks covered five-screen portrait use, keyboard/email correction, pending rendering, back retention and recovery.
 
-TalkBack 16 captions confirmed step 2–5 announcements, heading focus and “Enter your name.” Email-error speech is inconclusive despite correct validation/focus. Physical phones, VoiceOver, full gesture traversal, landscape, enlarged text and comprehensive contrast/accessibility audit remain open. No automated suite or independent human developer acceptance has been completed. See the verification matrix and linked screenshots for exact boundaries.
+TalkBack captions on the emulator and physical Pixel confirmed steps 2–5 and required-name speech. Physical Pixel validation/back/failure retry passed targeted checks on the earlier deployment. Email-error speech remains inconclusive. New source has 21 passing local browser executions and normal-screen axe checks; it is not yet deployed. Physical iPhone/VoiceOver, full gesture/audio assessment and independent human acceptance remain open. See STATUS.md and VERIFICATION.md for exact evidence boundaries.
 
 ## Production planning
 

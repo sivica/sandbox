@@ -11,7 +11,8 @@ Status: prepared for receiving-developer review. Roles below are proposed respon
 | Demo states and validation | Existing verification evidence | Confirm expected behavior and documented stale-error behavior |
 | Deployment and source provenance | Documented; runtime bytes matched PR | Owner gives developer Railway access if needed |
 | Screen-reader step/name speech | Limited emulator evidence | Developer reviews evidence boundaries |
-| Email-error speech and physical devices | Open | Owner supplies device; developer verifies speech/gestures |
+| Physical Android | Targeted earlier-deployment checks complete | Review linked physical evidence; retest new source |
+| Email-error speech and iPhone VoiceOver | Open | Verify on accessible devices; DOM tests are separate evidence |
 | Format useful for target platform | Unconfirmed | Buyer/developer chooses React web or native delivery |
 | Consolidated revision and final acceptance | Pending | Buyer/developer supplies one feedback list and signs off |
 

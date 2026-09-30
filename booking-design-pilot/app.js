@@ -52,6 +52,7 @@ function App() {
     [mode, setMode] = useState("normal"),
     [form, setForm] = useState({ name: "", email: "", note: "" }),
     [errors, setErrors] = useState({}),
+    [validationAttempt, setValidationAttempt] = useState(0),
     [sending, setSending] = useState(false),
     [submitError, setSubmitError] = useState(false),
     [revision, setRevision] = useState("reviewed");
@@ -62,6 +63,12 @@ function App() {
   useEffect(() => {
     screenRef.current?.querySelector("h1")?.focus();
   }, [step]);
+  useEffect(() => {
+    if (validationAttempt && Object.keys(errors).length) {
+      // Focus after the error description and aria-describedby are committed.
+      (errors.name ? nameRef : emailRef).current?.focus();
+    }
+  }, [validationAttempt]);
   const button = (label, onClick, props = {}) =>
     h("button", { type: "button", onClick, ...props }, label);
   function submit(e) {
@@ -73,7 +80,7 @@ function App() {
       next.email = "Enter a valid email address.";
     setErrors(next);
     if (Object.keys(next).length) {
-      (next.name ? nameRef : emailRef).current?.focus();
+      setValidationAttempt((attempt) => attempt + 1);
       return;
     }
     const validatedBooking = {
@@ -465,14 +472,13 @@ function App() {
       h(
         "nav",
         { "aria-label": "Journey progress" },
-        names.map((n, i) =>
-          h("span", {
+        h("ol", { className: "progress-list" }, names.map((n, i) =>
+          h("li", {
             key: n,
             className: i <= step ? "progress active" : "progress",
-            "aria-label": n,
             "aria-current": i === step ? "step" : undefined,
-          }),
-        ),
+          }, h("span", { className: "sr-only" }, n)),
+        )),
       ),
       h("div", { className: "screen", key: step, ref: screenRef }, content),
       h("footer", null, "FICTIONAL STUDIO · INTERACTIVE DESIGN SAMPLE"),

@@ -53,7 +53,7 @@ textarea:focus-visible {
 }
 .review-panel p,
 .review-panel li {
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.65;
 }
 .review-panel ul {
@@ -83,24 +83,23 @@ header {
 .back {
   border: 0;
   background: transparent;
-  font-size: 23px;
+  font-size: 1.4375rem;
   width: 48px;
 }
 .brand {
   font-family: Manrope, sans-serif;
   font-weight: 800;
-  font-size: 25px;
+  font-size: 1.5625rem;
   letter-spacing: -1px;
 }
 .step {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
-  width: 48px;
+  min-width: 3rem;
+  white-space: nowrap;
   text-align: right;
 }
 nav {
-  display: flex;
-  gap: 5px;
   padding: 0 24px 18px;
 }
 .progress {
@@ -118,7 +117,7 @@ nav {
 }
 .eyebrow {
   display: block;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 1.7px;
   margin: 20px 0 12px;
@@ -126,19 +125,19 @@ nav {
 }
 h1 {
   font-family: Manrope, sans-serif;
-  font-size: 32px;
+  font-size: 2rem;
   line-height: 1.16;
   letter-spacing: -1.1px;
   margin: 0 0 16px;
   font-weight: 700;
 }
 h2 {
-  font-size: 16px;
+  font-size: 1rem;
   letter-spacing: -0.3px;
   margin: 24px 0 14px;
 }
 p {
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.65;
   color: var(--muted);
   margin: 0 0 20px;
@@ -152,17 +151,17 @@ p {
 }
 .hero h1 {
   max-width: 220px;
-  font-size: 31px;
+  font-size: 1.9375rem;
 }
 .hero p {
   max-width: 235px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .hero-art {
   position: absolute;
   right: -10px;
   bottom: 0;
-  font-size: 115px;
+  font-size: 7.1875rem;
   color: #698c6245;
 }
 .section-heading {
@@ -171,7 +170,7 @@ p {
   align-items: center;
 }
 .section-heading span {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--muted);
 }
 .service-card {
@@ -194,7 +193,7 @@ p {
   border-radius: 12px;
   min-width: 46px;
   height: 52px;
-  font-size: 30px;
+  font-size: 1.875rem;
 }
 .service-copy {
   flex: 1;
@@ -203,19 +202,19 @@ p {
   gap: 6px;
 }
 .service-copy small {
-  font-size: 8px;
+  font-size: 0.5rem;
   letter-spacing: 1px;
   color: var(--muted);
 }
 .service-copy strong {
-  font-size: 16px;
+  font-size: 1rem;
 }
 .service-copy span {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .footnote {
-  font-size: 11px;
+  font-size: 0.6875rem;
   line-height: 1.6;
   margin-top: 18px;
 }
@@ -225,7 +224,7 @@ p {
   display: grid;
   place-items: center;
   background: radial-gradient(ellipse at 70% 20%, #dee9ca, #e9dfcf);
-  font-size: 110px;
+  font-size: 6.875rem;
   color: #466347;
 }
 .summary {
@@ -235,17 +234,17 @@ p {
   padding: 18px;
   background: var(--soft);
   border-radius: 14px;
-  font-size: 14px;
+  font-size: 0.875rem;
   margin: 20px 0;
 }
 .summary small {
   display: block;
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--muted);
   margin-top: 6px;
 }
 .visit {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--muted);
   padding-left: 18px;
   line-height: 2;
@@ -254,7 +253,7 @@ p {
   border: 1px solid var(--line);
   padding: 16px;
   border-radius: 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   margin: 20px 0;
   line-height: 1.6;
 }
@@ -290,7 +289,7 @@ p {
   background: transparent;
   color: var(--ink);
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 12px 4px;
 }
 .selected {
@@ -312,7 +311,7 @@ p {
 }
 .field {
   display: block;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   margin: 18px 0;
 }
@@ -337,14 +336,14 @@ p {
   display: block;
   color: #a12c21;
   margin-top: 7px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .error-box {
   background: #fff0ec;
   border: 1px solid #d9a89d;
   border-radius: 12px;
   padding: 14px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #882b21;
 }
 .booking-time {
@@ -358,7 +357,7 @@ p {
   display: grid;
   place-items: center;
   background: var(--soft);
-  font-size: 32px;
+  font-size: 2rem;
   margin: 28px 0;
 }
 .confirmation {
@@ -374,16 +373,16 @@ p {
   border-radius: 0;
 }
 .confirmation p {
-  font-size: 13px;
+  font-size: 0.8125rem;
   margin: 10px 0;
 }
 .confirmation small {
-  font-size: 10px;
+  font-size: 0.625rem;
   color: var(--muted);
 }
 footer {
   text-align: center;
-  font-size: 8px;
+  font-size: 0.5rem;
   letter-spacing: 1.2px;
   padding: 12px 12px calc(20px + env(safe-area-inset-bottom));
   color: var(--muted);
@@ -397,7 +396,7 @@ footer {
 }
 .draft .phone h1 {
   font-family: Arial, sans-serif;
-  font-size: 27px;
+  font-size: 1.6875rem;
   letter-spacing: 0;
 }
 .draft .service-card {
@@ -459,10 +458,10 @@ footer {
   }
   .review-panel small {
     display: block;
-    font-size: 10px;
+    font-size: 0.625rem;
   }
   .review-panel a {
-    font-size: 12px;
+    font-size: 0.75rem;
     margin: 12px 0 0;
   }
 }
@@ -514,3 +513,5 @@ footer {
     margin-left: 0;
   }
 }
+
+.progress-list { display: flex; gap: 5px; list-style: none; padding: 0; margin: 0; }
