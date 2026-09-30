@@ -1,0 +1,30 @@
+{
+  "repository": "https://github.com/sivica/sandbox",
+  "revision": "1d25ab1668513275a896b844f38a4a9debd9f07d",
+  "files": {
+    "app.js": {
+      "matches_published_revision": true,
+      "sha256": "5dd54bee2415af999e9d024b00f2a75a8784f0118c3ae744e742c017329a4a10"
+    },
+    "index.html": {
+      "matches_published_revision": true,
+      "sha256": "93cefbe9c739f0453e1a31ce59805e1ce2ab44b27692cfedf14be40dc3bb4be7"
+    },
+    "styles.css": {
+      "matches_published_revision": true,
+      "sha256": "bbec4167cb62f28b31668d231dc36ae3cf0b2e351f8c60b59a63f22fc24e4c23"
+    },
+    "Dockerfile": {
+      "matches_published_revision": true,
+      "sha256": "6ac2278c160efc8ce7b7147e0d55602486cce7c88bdf0a7cd07c2251053fc8b0"
+    },
+    "Caddyfile": {
+      "matches_published_revision": true,
+      "sha256": "e32b01beea886c8b1172889a6a9d00ef84e4a5116e08a758177eb594b8fc4b81"
+    },
+    ".dockerignore": {
+      "matches_published_revision": true,
+      "sha256": "8d7f15a4458b8302dc8cdc97de320e83c2a8538f9fbc585678e3113b38cd86d6"
+    }
+  }
+}

@@ -1,51 +1,71 @@
 # Kindred booking concept — developer handoff
 
-## Status and scope
+Updated 30 September 2026. Delivery: design prototype for review and implementation planning. Buyer/developer acceptance remains pending.
 
-Interactive React concept for a fictional studio. Five screens: service list, service detail, day/time selection, customer details, confirmation. Uses mock availability, relative dates, EUR prices and a fixed demo reference. No real reservation, email, payment, backend or persistence.
+## Start here
 
-## Open it
+- Live concept: https://booking-design-pilot-production.up.railway.app/
+- Draft PR: https://github.com/sivica/sandbox/pull/1
+- Published source baseline: `1d25ab1668513275a896b844f38a4a9debd9f07d`, folder `booking-design-pilot/`.
+- This revision publishes the corrected documentation and selected verification evidence alongside the unchanged prototype.
+- Read `VERIFICATION.md`, `ACCEPTANCE.md` and `DEPLOYMENT.md` in this source folder.
 
-From this folder run `python3 -m http.server 8765`, then open `http://localhost:8765`. React 18.3.1 loads from esm.sh; fonts load from Google Fonts. Internet is required for React. Fonts have local fallbacks. For production, bundle dependencies locally, lock versions and choose an approved asset/font policy. No build installation is required for this concept.
+## Scope
 
-## Files and components
+Interactive React web concept for a fictional studio. Five screens: services → service detail → day/time → customer details → confirmation. Mock availability, relative dates, EUR prices and a fixed demo reference. No real reservation, email, payment, backend, analytics or persistence. No ChatGPT subscription connection or AI integration is implemented. Native iOS/Android conversion is outside this source delivery.
 
-- `index.html`: mobile viewport and entry point.
-- `app.js`: React application, mock services and state-driven journey. Uses createElement so no JSX transpiler is needed. Shared render helpers: buttons, service summary and form fields.
-- `styles.css`: tokens for ink, muted text, paper, border, accent, spacing and radius; mobile layouts and reduced-motion treatment.
+## Run locally
 
-State is in memory. Going back preserves selections and entered text. Selecting a service resets the time when advancing to the day/time screen. The confirmation action clears the form for a fresh journey. No analytics or network submission code is included. Do not enter sensitive or actual customer information.
+From this source folder:
 
-## Demonstration states
+```sh
+python3 -m http.server 8765
+```
 
-The Demo state control exposes loading and an empty menu on screen 1, unavailable slots on screen 3, and a simulated submission failure on screen 4. Normal mode restores the happy path. Submission shows a short pending state; errors retain entered details. All availability is invented. Controls are developer demonstration tools, not customer-facing production features.
+Open http://localhost:8765 . Python 3 and an internet connection are needed. React 18.3.1 loads from esm.sh; Google Fonts has local font fallbacks. Refresh loses all selections and entered details. Use invented details only.
 
-## Review value shown
+## Source map
 
-The version switch contrasts the reviewed concept with a constructed initial layout. It is not an actual archived AI result or evidence of measured improvement. The reviewed version adds consistent spacing, reusable service hierarchy, clearer selected states and a coherent visual system. Validation, recovery and handoff are explicit; a developer should judge their usefulness rather than accept the claim from appearance alone.
+| File | Responsibility |
+| --- | --- |
+| index.html | Viewport, page title, CSS/module entry points |
+| app.js | Mock service data, five-screen React flow, validation and demo states |
+| styles.css | Design tokens, responsive layout, focus styling and reduced motion |
+| Dockerfile | Static Caddy container, copies application files and this handoff |
+| Caddyfile | Serves /srv on PORT (default 8080); Railway supplies HTTPS |
+| .dockerignore | Excludes Git metadata and local previews from Docker context |
+| TIMELOG.md | Historical creation effort with subsequent-work caveats |
 
-## Developer assessment — pending, not performed
+In app.js, service content starts at `services`, screen titles at `names`, state/navigation at `App`, validation at `submit`, and form controls at `field`. Design tokens are at the top of styles.css. One small App function is appropriate for this concept; production responsibilities may justify separate screen components and explicit navigation/state logic.
 
-1. Open source using the documented command. Can you understand and change one service and a design token?
-2. At 390px and 360px, walk through all five screens and back navigation. Check overflow, focus visibility, keyboard operation, contrast and touch targets.
-3. Exercise empty, loading, unavailable and failed-submit states. Enter missing/invalid details; confirm inline errors and retry behavior.
-4. Confirm whether React web is a useful handoff for your intended platform. Native iOS would need translated components and navigation; this source is not a native app.
-5. Record missing interactions and blockers, useful elements, estimated production engineering and whether the format saves you time.
+## State and interaction rules
 
-A separate browser review of the original PR commit exercised all five screens at 360px and 390px and reproduced three correctness/accessibility issues plus two smaller UI issues. This revision addresses those findings, but the revised behavior has not been checked in the browser. No automated tests or independent production-developer assessment have been completed. Physical-device and screen-reader checks remain pending.
+- Choosing a service opens its details. Pressing Choose a time clears the slot every time, including for the same service.
+- Changing a day clears the slot. Continue requires a slot and available demo mode.
+- In-app back preserves customer details and selections, unless a later action explicitly resets the slot. It is not browser-history navigation; no routes/deep links are implemented.
+- Missing/invalid details keep the user on the form and focus the first invalid field. Inline errors remain while editing until the next submission. Email uses native validity; name must contain non-whitespace text.
+- Submission lasts a simulated 700 ms. Customer fields, demo controls and back navigation are disabled. Confirmation uses a validated snapshot.
+- Successful submission retains form values. Back from confirmation returns to those values. Explore treatments clears form/errors, slot and confirmed snapshot, resets demo mode and returns to services; the previously selected day/service remain in memory.
+- No state is saved across reloads. No information is sent by the mock submission.
 
-## Production decisions still needed
+## Demonstration controls
 
-Real dates/timezones and business hours; server-authoritative slot locking; authentication if required; reliable booking IDs; validation/security and data retention; notification consent and delivery; pricing/tax/payment rules; cancellation policies; accessible screen announcements and focus management; browser/device coverage; production build/deployment. Form submission currently uses a timer and must be replaced with a booking API.
+Loading/empty appear on services; unavailable covers all mock days on time selection; error simulates failed submission. Show sample menu/availability restores normal mode. Failure retains details; select normal mode and retry. The controls and 700 ms timer are developer demonstration tools, not production requirements.
+
+The version switch compares a constructed illustrative draft with the reviewed layout. It is not an archived AI output or evidence of measured improvement.
+
+## Verified status and limits
+
+Browser regression checks at 360px and 390px covered the five screens, pending control lock, validated confirmation, native email rejection, first-invalid-field focus, failure/retry and unavailable recovery. Android API 36 Chrome emulator checks covered five-screen portrait use, keyboard/email correction, pending rendering, back retention and recovery.
+
+TalkBack 16 captions confirmed step 2–5 announcements, heading focus and “Enter your name.” Email-error speech is inconclusive despite correct validation/focus. Physical phones, VoiceOver, full gesture traversal, landscape, enlarged text and comprehensive contrast/accessibility audit remain open. No automated suite or independent human developer acceptance has been completed. See the verification matrix and linked screenshots for exact boundaries.
+
+## Production planning
+
+Agree target platform, booking integration, timezone/business hours, slot conflicts/locking, server validation, idempotent submission, confirmation IDs, notification behavior, data retention, payment/tax and cancellation rules. These are decisions to scope, not implemented features. The API contract and ownership checklist are in ACCEPTANCE.md.
+
+A maintained release needs a bundled dependency build/lockfile, reproducible container version, agreed asset/font policy and release/rollback process. External runtime imports and the mutable Caddy image tag remain prototype limitations.
 
 ## Acceptance and revision
 
-The target concept journey is service → time → details → confirmation. The operating plan allows one consolidated revision within the five screens; new integrations, screens or platform conversion need revised scope. Acceptance is not yet confirmed: use the developer checklist above before calling this ready for a paid pilot.
-
-## Review fixes in this revision
-
-- Freeze all customer fields and demo controls during submission; confirmation uses a validated snapshot.
-- Use native email validity while retaining custom inline errors. Focus the first invalid field.
-- Focus each new screen heading and announce the step through a polite live region. Screen-reader behavior needs follow-up assessment.
-- Explain that unavailable mode covers every mock day, and name the working recovery button.
-- Place mobile demo controls in a grid with an explicit gap; format source with pinned Prettier.
+The concept scope is five screens and one consolidated revision. New integrations, screens or native conversion require revised scope. The handoff is available for receiving-developer review; acceptance and production estimation are pending. Agent review does not establish independent developer approval, buyer willingness to pay or measured time saved.
