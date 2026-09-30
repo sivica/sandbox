@@ -64,3 +64,33 @@ test('axe checks validation, failed submission and unavailable states', async ({
  await field(p,'Demo state').selectOption('error'); await btn(p,'Confirm demo booking →').click(); await expect(p.getByText(/We couldn’t complete the demo booking/)).toBeVisible(); await audit(p);
  await btn(p,'Go back').click(); await field(p,'Demo state').selectOption('unavailable'); await expect(p.getByText('No appointments available',{exact:true})).toBeVisible(); await audit(p);
 });
+
+test('axe checks loading and empty states', async ({page:p}) => {
+ await field(p,'Demo state').selectOption('loading'); await expect(p.getByText('Loading treatments…',{exact:true})).toBeVisible(); await audit(p);
+ await field(p,'Demo state').selectOption('empty'); await expect(p.getByText('Our menu is being refreshed',{exact:true})).toBeVisible(); await audit(p);
+});
+async function contentFits(p) {
+ const clipped = await p.evaluate(() => {
+  const box = document.querySelector('.phone').getBoundingClientRect();
+  const walker = document.createTreeWalker(document.querySelector('.phone'), NodeFilter.SHOW_TEXT);
+  const clipped=[]; let node;
+  while (node = walker.nextNode()) {
+   if (!node.textContent.trim() || node.parentElement.closest('[aria-hidden=true], .sr-only, option')) continue;
+   const range=document.createRange(); range.selectNodeContents(node);
+   for (const rect of range.getClientRects()) if (rect.width && (rect.left < box.left-2 || rect.right > box.right+2)) clipped.push(node.textContent.trim());
+  }
+  return [...new Set(clipped)];
+ });
+ expect(clipped, 'visible text must fit inside the phone container').toEqual([]);
+ for (const b of await p.locator('.phone button:visible').all()) {
+  const box=await b.boundingBox(); expect(box.height).toBeGreaterThanOrEqual(48); expect(box.width).toBeGreaterThanOrEqual(24);
+ }
+}
+test('200 percent text remains inside phone and buttons retain target size', async ({page:p}, info) => {
+ await p.addStyleTag({content:'html { font-size: 200% !important; }'});
+ await contentFits(p); await p.screenshot({path:info.outputPath('enlarged-services.png'),fullPage:true});
+ await p.getByRole('button',{name:/SIGNATURE FACIAL.*The reset/}).click(); await contentFits(p);
+ await btn(p,'Choose a time →').click(); await contentFits(p);
+ await btn(p,'09:30').click(); await btn(p,'Continue →').click(); await contentFits(p);
+ await valid(p); await btn(p,'Confirm demo booking →').click(); await expect(p.getByRole('heading',{level:1})).toHaveText('A moment just for you.'); await contentFits(p);
+});

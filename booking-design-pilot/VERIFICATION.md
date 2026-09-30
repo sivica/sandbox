@@ -12,13 +12,13 @@ Evidence recorded 30 September 2026. Packaging did not rerun application tests. 
 | Portrait Android keyboard/back flow | Passed emulator visual checks | API 36, Chrome; not physical-device evidence |
 | TalkBack step 2–5 announcements and heading focus | Captured as speech captions | [Step 2](evidence/speech-transition-3.png), [step 3](evidence/talkback-step3.png), [step 4](evidence/talkback-step4.png), [step 5](evidence/talkback-confirmation-speech.png) |
 | TalkBack missing-name error | Captured as speech caption | [Name error](evidence/talkback-invalid-name.png) |
-| TalkBack email-error speech | Inconclusive | Focus/validation passed; exact error speech not reliably captured |
+| TalkBack email-error speech | Emulator captions captured | Fresh and repeated errors on new source; physical/audible speech remains inconclusive |
 | Physical Android | Passed targeted earlier-deployment checks | [Physical report](evidence/physical/REPORT.md); email speech inconclusive |
 | iPhone/VoiceOver | Pending | Browser WebKit emulation is not physical VoiceOver |
-| Landscape and 200% relative text | Targeted automated checks passed | Page overflow only; screenshot/clipping review remains |
+| Landscape and 200% relative text | Targeted automated checks passed | Page/internal text overflow and button dimensions checked; screenshots inspected |
 | Full screen-reader gestures/listening | Pending | ADB input/captions are limited evidence |
 | Comprehensive contrast/accessibility audit | Pending | No conformance claim |
-| Automated browser suite | 27/27 local executions passed | [Automation report](AUTOMATION.md); cloud result pending |
+| Automated browser suite | 33/33 local executions passed | [Automation report](AUTOMATION.md); earlier 27-test cloud suite passed; latest status in STATUS.md |
 | Independent human developer/buyer acceptance | Pending | Agent assessment is not human acceptance |
 
 ## Physical-device follow-up
