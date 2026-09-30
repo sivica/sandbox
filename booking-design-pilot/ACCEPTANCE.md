@@ -8,11 +8,11 @@ Status: prepared for receiving-developer review. Roles below are proposed respon
 | --- | --- | --- |
 | Scope and source behavior documented | Corrected | Receiving developer confirms understanding |
 | Runnable five-screen flow | Verified in existing targeted checks | Receiving developer retrieves package and runs locally |
-| Demo states and validation | Existing verification evidence | Confirm expected behavior and documented stale-error behavior |
-| Deployment and source provenance | Documented; runtime bytes matched PR | Owner gives developer Railway access if needed |
+| Demo states and validation | Existing verification evidence | Review automated validation/recovery evidence |
+| Deployment and source provenance | New source differs from earlier Railway deployment | Owner gives developer Railway access if needed |
 | Screen-reader step/name speech | Limited emulator evidence | Developer reviews evidence boundaries |
 | Physical Android | Targeted earlier-deployment checks complete | Review linked physical evidence; retest new source |
-| Email-error speech and iPhone VoiceOver | Open | Verify on accessible devices; DOM tests are separate evidence |
+| Email-error speech and iPhone VoiceOver | Emulator email captions captured; physical/iPhone open | Verify on accessible devices; DOM tests are separate evidence |
 | Format useful for target platform | Unconfirmed | Buyer/developer chooses React web or native delivery |
 | Consolidated revision and final acceptance | Pending | Buyer/developer supplies one feedback list and signs off |
 

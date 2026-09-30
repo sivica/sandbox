@@ -20,7 +20,7 @@ Updated 1 October 2026. This checklist covers prototype verification, not produc
 - [x] Shared Google Doc updated with current status and source links.
 - [x] Handoff evidence and package refreshed; source/deployment difference recorded.
 
-Expanded 33-test cloud result: pending dispatch/completion on this publication. [Earlier successful run](https://github.com/sivica/sandbox/actions/runs/36786134992).
+Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e14d18ab160b81d8a271db1d` in 47.3s. [Verified cloud run](https://github.com/sivica/sandbox/actions/runs/36788827176). Downloaded report and screenshots inspected.
 
 ## Requires device or human access
 - [ ] Physical TalkBack retest of email speech on this new source revision. Earlier email speech remains inconclusive.
