@@ -32,7 +32,7 @@ The version switch contrasts the reviewed concept with a constructed initial lay
 4. Confirm whether React web is a useful handoff for your intended platform. Native iOS would need translated components and navigation; this source is not a native app.
 5. Record missing interactions and blockers, useful elements, estimated production engineering and whether the format saves you time.
 
-No automated tests, browser interaction checks or independent developer assessment were run in this delivery. This checklist is for that next review.
+A separate browser review of the original PR commit exercised all five screens at 360px and 390px and reproduced three correctness/accessibility issues plus two smaller UI issues. This revision addresses those findings, but the revised behavior has not been checked in the browser. No automated tests or independent production-developer assessment have been completed. Physical-device and screen-reader checks remain pending.
 
 ## Production decisions still needed
 
@@ -41,3 +41,11 @@ Real dates/timezones and business hours; server-authoritative slot locking; auth
 ## Acceptance and revision
 
 The target concept journey is service → time → details → confirmation. The operating plan allows one consolidated revision within the five screens; new integrations, screens or platform conversion need revised scope. Acceptance is not yet confirmed: use the developer checklist above before calling this ready for a paid pilot.
+
+## Review fixes in this revision
+
+- Freeze all customer fields and demo controls during submission; confirmation uses a validated snapshot.
+- Use native email validity while retaining custom inline errors. Focus the first invalid field.
+- Focus each new screen heading and announce the step through a polite live region. Screen-reader behavior needs follow-up assessment.
+- Explain that unavailable mode covers every mock day, and name the working recovery button.
+- Place mobile demo controls in a grid with an explicit gap; format source with pinned Prettier.
