@@ -117,7 +117,18 @@ function App() {
         required: true,
         "aria-invalid": !!errors[key],
         "aria-describedby": errors[key] ? key + "-error" : undefined,
-        onChange: (e) => setForm({ ...form, [key]: e.target.value }),
+        onChange: (e) => {
+          const input = e.target;
+          setForm((current) => ({ ...current, [key]: input.value }));
+          if (key === "email" && input.validity.valid) {
+            setErrors((current) => {
+              if (!current.email) return current;
+              const next = { ...current };
+              delete next.email;
+              return next;
+            });
+          }
+        },
       }),
       errors[key] &&
         h(
@@ -159,7 +170,8 @@ function App() {
         "div",
         { className: "section-heading" },
         h("h2", null, "Choose your treatment"),
-        h("span", null, "3 options"),
+        mode !== "empty" && mode !== "loading" &&
+          h("span", null, `${services.length} options`),
       ),
       mode === "loading"
         ? h("p", { role: "status", className: "state" }, "Loading treatments…")

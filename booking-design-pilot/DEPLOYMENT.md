@@ -11,7 +11,7 @@ git rev-parse HEAD
 cd booking-design-pilot
 ```
 
-Use the branch tip for the corrected handoff. The receiving-developer agent reviewed f5f302b6b6ff07089887ef949ee92a8bf69f6bc9; subsequent documentation corrections preserve that runtime. See evidence/current-runtime.json for current application hashes. Historical baseline 1d25ab1668513275a896b844f38a4a9debd9f07d lacks today's test package and contains older runtime/container files. evidence/source-provenance.json and evidence/live/source-match.json describe historical revisions only.
+Use the branch tip for the corrected handoff. The receiving-developer agent reviewed f5f302b6b6ff07089887ef949ee92a8bf69f6bc9; later revisions include buyer-requested menu-count and email-error improvements. evidence/current-runtime.json preserves the pre-improvement application hashes. Historical baseline 1d25ab1668513275a896b844f38a4a9debd9f07d lacks today's test package and contains older runtime/container files. evidence/source-provenance.json and evidence/live/source-match.json describe historical revisions only.
 
 ## Railway
 - Project: a549eb28-d30d-4e2d-a8ff-f632fac46f24.
@@ -21,7 +21,7 @@ Use the branch tip for the corrected handoff. The receiving-developer agent revi
 - Dashboard: https://railway.com/project/a549eb28-d30d-4e2d-a8ff-f632fac46f24
 - Verified application deployment: 923c04de-22e3-474f-ac22-c04b0f3c01ab, including Safari 16px controls/versioned CSS. Live suite passed 33/33 in 32.7s.
 
-Documentation refreshes preserve these application files. For the latest upload ID and health consult Railway's deployment history. Public HANDOFF.md and other delivery documents are copied into the same container. Owner supplies receiving-developer account access; no credentials are packaged.
+The subsequent buyer-feedback release changes the menu count and email-error correction behavior. For the latest upload ID and health consult Railway's deployment history. Public HANDOFF.md and other delivery documents are copied into the same container. Owner supplies receiving-developer account access; no credentials are packaged.
 
 ## Deploy
 From booking-design-pilot/ with an authorized Railway CLI account:

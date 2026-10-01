@@ -6,7 +6,7 @@ Updated 1 October 2026. Delivery: design prototype for review and implementation
 
 - Live concept: https://booking-design-pilot-production.up.railway.app/
 - Draft PR: https://github.com/sivica/sandbox/pull/1
-- Retrieve the current `booking-design-pilot` branch, folder `booking-design-pilot/`. Record `git rev-parse HEAD` before review. The receiving-developer agent reviewed `f5f302b6b6ff07089887ef949ee92a8bf69f6bc9`; subsequent documentation corrections preserve its application runtime.
+- Retrieve the current `booking-design-pilot` branch, folder `booking-design-pilot/`. Record `git rev-parse HEAD` before review. The receiving-developer agent reviewed `f5f302b6b6ff07089887ef949ee92a8bf69f6bc9`; later revisions include the buyer-requested menu-count and email-error improvements.
 - Latest source adds browser tests, error-focus timing correction, semantic progress markup and relative text sizes. Railway deployment now matches the latest runtime; 33/33 live checks passed. See evidence/live/REPORT.md.
 - Start with `STATUS.md` for completed and remaining work; `AUTOMATION.md` explains repeatable tests.
 - Read `VERIFICATION.md`, `ACCEPTANCE.md` and `DEPLOYMENT.md` in this source folder.
@@ -44,7 +44,7 @@ In app.js, service content starts at `services`, screen titles at `names`, state
 - Choosing a service opens its details. Pressing Choose a time clears the slot every time, including for the same service.
 - Changing a day clears the slot. Continue requires a slot and available demo mode.
 - In-app back preserves customer details and selections, unless a later action explicitly resets the slot. It is not browser-history navigation; no routes/deep links are implemented.
-- Missing/invalid details keep the user on the form and focus the first invalid field. Inline errors remain while editing until the next submission. Email uses native validity; name must contain non-whitespace text.
+- Missing/invalid details keep the user on the form and focus the first invalid field. The email error clears as soon as the corrected address passes native validity; the name error clears on the next valid submission. Email uses native validity; name must contain non-whitespace text.
 - Submission lasts a simulated 700 ms. Customer fields, demo controls and back navigation are disabled. Confirmation uses a validated snapshot.
 - Successful submission retains form values. Back from confirmation returns to those values. Explore treatments clears form/errors, slot and confirmed snapshot, resets demo mode and returns to services; the previously selected day/service remain in memory.
 - No state is saved across reloads. No information is sent by the mock submission.
@@ -59,7 +59,7 @@ The version switch compares a constructed illustrative draft with the reviewed l
 
 Browser regression checks at 360px and 390px covered the five screens, pending control lock, validated confirmation, native email rejection, first-invalid-field focus, failure/retry and unavailable recovery. Android API 36 Chrome emulator checks covered five-screen portrait use, keyboard/email correction, pending rendering, back retention and recovery.
 
-The receiving-developer agent ran a clean export of f5f302b: 33/33 local executions passed in 26.1s. The post-Safari-fix live suite passed 33/33 in 32.7s. Runtime HTML/JavaScript/CSS match that reviewed source; see evidence/current-runtime.json. USB Android failure-to-success retry retained the entered details, treatment and time. iPhone Simulator Safari booking/validation passed after the 16px form-control fix.
+The receiving-developer agent ran a clean export of f5f302b: 33/33 local executions passed in 26.1s. The post-Safari-fix live suite passed 33/33 in 32.7s. That runtime comparison predates the buyer-requested improvements; see evidence/current-runtime.json for its historical hashes. USB Android failure-to-success retry retained the entered details, treatment and time. iPhone Simulator Safari booking/validation passed after the 16px form-control fix.
 
 TalkBack captions on emulator and physical Pixel supply partial step/error evidence. Owner confirmed audible speech and treatment heading/step-2 announcement on USB Android; full listening and gesture assessment is deferred and nonblocking. Physical iPhone/VoiceOver is excluded by owner request and unverified. Agent review accepted with documentation conditions; independent human developer and buyer acceptance remain pending. See STATUS.md and VERIFICATION.md.
 

@@ -33,7 +33,7 @@ Physical iPhone Safari/VoiceOver testing is outside the pilot scope at the owner
 Full TalkBack listening and gesture assessment is deferred by owner request and does not block the design prototype handoff. The owner confirmed audible speech and the treatment heading/step-2 announcement on the USB phone; this is partial evidence, not a full assessment.
 
 ## Current deployment and receiving-developer review
-- [x] Safari runtime deployed successfully in 923c04de-22e3-474f-ac22-c04b0f3c01ab; current application hashes in [runtime manifest](evidence/current-runtime.json).
+- [x] Safari runtime deployed successfully in 923c04de-22e3-474f-ac22-c04b0f3c01ab; historical pre-improvement application hashes in [runtime manifest](evidence/current-runtime.json).
 - [x] Post-fix live suite: 33/33 passed in 32.7s. Prior cloud live job passed: https://github.com/sivica/sandbox/actions/runs/36892138248 . That cloud run predates the Safari change.
 - [x] Receiving-developer agent reviewed f5f302b from a clean export: 33/33 passed in 26.1s; accepted with documentation conditions.
 - [x] Corrected default checkout, public handoff scope and contradictory evidence summaries. Application files are unchanged by these corrections.
@@ -47,3 +47,9 @@ See [automated verification](AUTOMATION.md), [physical report](evidence/physical
 
 ## Scheduled follow-up
 Started immediately at the owner’s request. The scheduled duplicate is paused. No recurring follow-up was created.
+
+## Buyer-feedback improvements
+- [x] Buyer-role agent accepted the five-screen prototype; human buyer acceptance remains pending.
+- [x] Hide the treatment count in empty/loading states; derive the normal count from the service list.
+- [x] Clear the existing email error and its accessibility attributes once the corrected address is valid. Invalid/empty corrections retain the error; other field errors are preserved.
+- Earlier 33-test results and device checks predate these improvements. No new test run is claimed.

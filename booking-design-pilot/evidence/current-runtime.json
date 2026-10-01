@@ -2,7 +2,7 @@
   "checked_date": "2026-10-01",
   "reviewed_source_commit": "f5f302b6b6ff07089887ef949ee92a8bf69f6bc9",
   "runtime_deployment": "923c04de-22e3-474f-ac22-c04b0f3c01ab",
-  "scope": "Application files only; subsequent documentation changes preserve these hashes.",
+  "scope": "Historical runtime comparison before buyer-requested menu-count and email-error changes. Does not describe the latest branch runtime.",
   "files": [
     {
       "file": "index.html",
