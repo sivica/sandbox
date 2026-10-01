@@ -1,0 +1,50 @@
+name: Booking staging verification
+on:
+  pull_request:
+    paths: ['booking-staging/**', '.github/workflows/booking-staging.yml']
+  push:
+    branches: ['kindred-booking-staging']
+    paths: ['booking-staging/**', '.github/workflows/booking-staging.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kindred_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    defaults:
+      run:
+        working-directory: booking-staging
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/kindred_test
+      BOOKING_TOKEN_SECRET: ci-only-invented-secret-32-characters-minimum
+      PORT: '4174'
+      HOST: 127.0.0.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: booking-staging/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: booking-staging-evidence
+          path: |
+            booking-staging/playwright-report/
+            booking-staging/test-results/
+          retention-days: 14
