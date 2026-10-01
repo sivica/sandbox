@@ -15,6 +15,9 @@ test('five screens: focus, step status, axe and overflow', async ({page:p}, info
  await p.getByRole('button',{name:/SIGNATURE FACIAL.*The reset/}).click(); await step(p,2,'Service details');
  await btn(p,'Choose a time →').click(); await step(p,3,'Choose a time');
  await btn(p,'09:30').click(); await btn(p,'Continue →').click(); await step(p,4,'Your details');
+ for (const control of await p.locator('.field input, .field textarea').all()) {
+  await expect(control).toHaveCSS('font-size', '16px');
+ }
  await valid(p); await btn(p,'Confirm demo booking →').click();
  await expect(p.getByRole('heading',{level:1})).toHaveText('A moment just for you.'); await step(p,5,'Confirmation'); await p.screenshot({path:info.outputPath('confirmation.png'),fullPage:true});
  await btn(p,'Go back').click(); await expect(field(p,'Full name')).toHaveValue('PixelTester');
