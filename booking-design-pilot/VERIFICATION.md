@@ -16,7 +16,7 @@ Evidence recorded 30 September 2026. Packaging did not rerun application tests. 
 | Physical Android | Passed targeted earlier-deployment checks | [Physical report](evidence/physical/REPORT.md); email speech inconclusive |
 | Physical iPhone/VoiceOver | Outside pilot scope by owner request | Unverified; simulator Safari results are separate |
 | Landscape and 200% relative text | Targeted automated checks passed | Page/internal text overflow and button dimensions checked; screenshots inspected |
-| Full screen-reader gestures/listening | Pending | ADB input/captions are limited evidence |
+| Full screen-reader gestures/listening | Deferred by owner request | Not a prototype handoff blocker. Owner confirmed audible speech and treatment heading/step-2 announcement; full assessment remains incomplete. |
 | Comprehensive contrast/accessibility audit | Pending | No conformance claim |
 | Automated browser suite | 33/33 local executions passed | [Automation report](AUTOMATION.md); earlier 27-test cloud suite passed; latest status in STATUS.md |
 | Independent human developer/buyer acceptance | Pending | Agent assessment is not human acceptance |
@@ -28,4 +28,4 @@ Owner supplies an Android phone with approved USB debugging, or performs guided 
 ## Latest source revision
 See [current checklist](STATUS.md) for 1 October fixes, remaining tasks and deployment differences. The automated error-focus test establishes DOM timing, not a physical speech pass.
 
-Latest physical deployment follow-up: [Pixel report](evidence/physical-latest/REPORT.md) covers fresh/repeated email captions, initial step 1, failure caption, correction/confirmation and unavailable recovery. Full Android gesture/audio assessment remains open. Physical iPhone/VoiceOver is excluded from the pilot by owner request.
+Latest physical deployment follow-up: [Pixel report](evidence/physical-latest/REPORT.md) covers fresh/repeated email captions, initial step 1, failure caption, correction/confirmation and unavailable recovery. Full Android gesture/audio assessment is deferred by owner request. Physical iPhone/VoiceOver is excluded from the pilot by owner request.

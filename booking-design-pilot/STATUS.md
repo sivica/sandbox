@@ -28,7 +28,9 @@ Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e1
 - [x] Physical Pixel fresh/repeated email-error captions captured on latest deployed source; audible listening remains open.
 - [x] Physical initial step 1 and simulated-failure captions captured; unavailable-slot visual recovery passed.
 Physical iPhone Safari/VoiceOver testing is outside the pilot scope at the owner’s request; it is unverified and is not a remaining task.
-- [ ] Full screen-reader gesture/audio assessment; independent developer/buyer acceptance.
+- [ ] Independent developer/buyer acceptance.
+
+Full TalkBack listening and gesture assessment is deferred by owner request and does not block the design prototype handoff. The owner confirmed audible speech and the treatment heading/step-2 announcement on the USB phone; this is partial evidence, not a full assessment.
 
 ## Deployment
 - [x] Latest runtime deployed to Railway: f0f52472-a1b7-401b-b10a-da8b0d65b812.

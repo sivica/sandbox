@@ -59,7 +59,7 @@ The version switch compares a constructed illustrative draft with the reviewed l
 
 Browser regression checks at 360px and 390px covered the five screens, pending control lock, validated confirmation, native email rejection, first-invalid-field focus, failure/retry and unavailable recovery. Android API 36 Chrome emulator checks covered five-screen portrait use, keyboard/email correction, pending rendering, back retention and recovery.
 
-TalkBack captions on the emulator and physical Pixel confirmed steps 2–5 and required-name speech. Physical Pixel validation/back/failure retry passed targeted checks on the earlier deployment. Email-error speech remains inconclusive. New source has 21 passing local browser executions and normal-screen axe checks; it is not yet deployed. Full Android gesture/audio assessment and independent human acceptance remain open. Physical iPhone/VoiceOver testing is outside the pilot scope by owner request and remains unverified. See STATUS.md and VERIFICATION.md for exact evidence boundaries.
+TalkBack captions on the emulator and physical Pixel confirmed steps 2–5 and required-name speech. Physical Pixel validation/back/failure retry passed targeted checks on the earlier deployment. Email-error speech remains inconclusive. New source has 21 passing local browser executions and normal-screen axe checks; it is not yet deployed. Independent human acceptance remains open. Full Android gesture/audio assessment is deferred by owner request and is not a prototype handoff blocker. Physical iPhone/VoiceOver testing is outside the pilot scope by owner request and remains unverified. See STATUS.md and VERIFICATION.md for exact evidence boundaries.
 
 ## Production planning
 

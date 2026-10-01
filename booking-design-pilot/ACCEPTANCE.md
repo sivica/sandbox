@@ -12,7 +12,7 @@ Status: prepared for receiving-developer review. Roles below are proposed respon
 | Deployment and source provenance | New source differs from earlier Railway deployment | Owner gives developer Railway access if needed |
 | Screen-reader step/name speech | Limited emulator evidence | Developer reviews evidence boundaries |
 | Physical Android | Targeted earlier-deployment checks complete | Review linked physical evidence; retest new source |
-| Android screen-reader listening and gestures | Captions captured; full audio/gestures open | Verify on Android; DOM tests are separate evidence. Physical iPhone/VoiceOver is outside pilot scope by owner request. |
+| Android screen-reader listening and gestures | Full assessment deferred by owner request | Not a prototype handoff blocker; captions and owner-confirmed speech are partial evidence. Physical iPhone/VoiceOver is outside pilot scope. |
 | Format useful for target platform | Unconfirmed | Buyer/developer chooses React web or native delivery |
 | Consolidated revision and final acceptance | Pending | Buyer/developer supplies one feedback list and signs off |
 
