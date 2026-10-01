@@ -23,8 +23,8 @@ Updated 1 October 2026. This checklist covers prototype verification, not produc
 Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e14d18ab160b81d8a271db1d` in 47.3s. [Verified cloud run](https://github.com/sivica/sandbox/actions/runs/36788827176). Downloaded report and screenshots inspected.
 
 ## Requires device or human access
-- [ ] Physical TalkBack retest of email speech on this new source revision. Earlier email speech remains inconclusive.
-- [ ] Physical step 1 / simulated-failure speech and unavailable recovery follow-up.
+- [x] Physical Pixel fresh/repeated email-error captions captured on latest deployed source; audible listening remains open.
+- [x] Physical initial step 1 and simulated-failure captions captured; unavailable-slot visual recovery passed.
 - [ ] Physical iPhone Safari/VoiceOver. Playwright WebKit emulation is not an iPhone speech test.
 - [ ] Full screen-reader gesture/audio assessment; independent developer/buyer acceptance.
 
@@ -34,7 +34,7 @@ Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e1
 - [x] 33/33 checks passed against live Railway (32.3s).
 - [x] Added GitHub Actions manual live_url verification with saved artifacts.
 - [x] Cloud live-site job passed: https://github.com/sivica/sandbox/actions/runs/36892138248 (live job completed successfully; source job still running at this update).
-See [live report](evidence/live/REPORT.md). No physical device is currently connected; Mac lock blocks device streaming/browser access. Daily document-update automation awaits explicit recurrence approval after auto-review rejection.
+See [live report](evidence/live/REPORT.md). Physical Pixel follow-up completed after unlock; see [latest physical evidence](evidence/physical-latest/REPORT.md). Mac relocked before explicit device return. BrowserStack requires sign-in for iPhone access. Daily document-update automation awaits explicit recurrence approval after auto-review rejection.
 
 ## Evidence
 See [automated verification](AUTOMATION.md), [physical report](evidence/physical/REPORT.md), and [verification matrix](VERIFICATION.md), and [overnight report](evidence/overnight/REPORT.md). The physical streaming serial is no longer present in ADB; explicit remote erase was not observed.

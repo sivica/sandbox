@@ -12,7 +12,7 @@ Evidence recorded 30 September 2026. Packaging did not rerun application tests. 
 | Portrait Android keyboard/back flow | Passed emulator visual checks | API 36, Chrome; not physical-device evidence |
 | TalkBack step 2–5 announcements and heading focus | Captured as speech captions | [Step 2](evidence/speech-transition-3.png), [step 3](evidence/talkback-step3.png), [step 4](evidence/talkback-step4.png), [step 5](evidence/talkback-confirmation-speech.png) |
 | TalkBack missing-name error | Captured as speech caption | [Name error](evidence/talkback-invalid-name.png) |
-| TalkBack email-error speech | Emulator captions captured | Fresh and repeated errors on new source; physical/audible speech remains inconclusive |
+| TalkBack email-error speech | Emulator captions captured | Fresh and repeated errors on new source; latest physical captions also captured; audible listening remains unverified |
 | Physical Android | Passed targeted earlier-deployment checks | [Physical report](evidence/physical/REPORT.md); email speech inconclusive |
 | iPhone/VoiceOver | Pending | Browser WebKit emulation is not physical VoiceOver |
 | Landscape and 200% relative text | Targeted automated checks passed | Page/internal text overflow and button dimensions checked; screenshots inspected |
@@ -27,3 +27,5 @@ Owner supplies an Android phone with approved USB debugging, or performs guided 
 
 ## Latest source revision
 See [current checklist](STATUS.md) for 1 October fixes, remaining tasks and deployment differences. The automated error-focus test establishes DOM timing, not a physical speech pass.
+
+Latest physical deployment follow-up: [Pixel report](evidence/physical-latest/REPORT.md) covers fresh/repeated email captions, initial step 1, failure caption, correction/confirmation and unavailable recovery. Full gesture/audio and iPhone remain open.
