@@ -11,7 +11,15 @@
 - Unit, PostgreSQL integration and three-profile browser checks; separate GitHub Actions workflow.
 
 ## Verification and deployment
-Date/calendar unit tests: 5/5 passed locally. Bundled build succeeded. PostgreSQL integration and browser CI results pending. Staging deployment pending. No complete verification claim until those checks finish.
+Verified source: `45772d3bf7a83e635476ddb1867a3236d1dd5f0f`.
+- 5/5 date/calendar unit tests passed.
+- 8/8 PostgreSQL API scenarios passed (9 Node test results including the parent group).
+- 12/12 browser executions passed in 43.3s: 4 scenarios × Chromium mobile, WebKit mobile and Chromium landscape.
+- Both [push CI](https://github.com/sivica/sandbox/actions/runs/36933482947) and [PR CI](https://github.com/sivica/sandbox/actions/runs/36933530739) succeeded. Reports/screenshots downloaded and the saved-confirmation image inspected.
+- Private Railway deployment `15d72a0a-9ac7-490c-a45a-c35cc234266c` succeeded; logs confirm database migration/startup and ready server. No public domain exists, so live browser verification is not claimed.
+- Automatic approval review rejected creating a public staging domain because internet exposure needs explicit approval. Enable it only after the owner's approval.
+- Final formatting/evidence polish will be covered by the next CI run.
+
 
 ## Remaining for real customer use
 - Actual buyer's provider/calendar and business rules.
