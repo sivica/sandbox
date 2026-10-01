@@ -23,6 +23,7 @@ Updated 1 October 2026. This checklist covers prototype verification, not produc
 Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e14d18ab160b81d8a271db1d` in 47.3s. [Verified cloud run](https://github.com/sivica/sandbox/actions/runs/36788827176). Downloaded report and screenshots inspected.
 
 ## Requires device or human access
+- [x] Owner's USB Android phone: latest live failure-to-success retry passed with retained details, treatment and time; temporary UI dump removed. See [USB phone evidence](evidence/usb-phone/REPORT.md). Earlier cloud Pixel erase remains unobserved.
 - [x] iPhone 17 Simulator / iOS 26.5 Safari booking and required-field validation checked. Fixed focus zoom with 16px form controls; fresh-tab confirmation fits. See [simulator evidence](evidence/iphone-simulator/REPORT.md).
 - [x] Physical Pixel fresh/repeated email-error captions captured on latest deployed source; audible listening remains open.
 - [x] Physical initial step 1 and simulated-failure captions captured; unavailable-slot visual recovery passed.
