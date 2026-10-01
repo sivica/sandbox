@@ -33,6 +33,7 @@ Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e1
 - [x] HTML/JavaScript/CSS match source a2e132a byte for byte.
 - [x] 33/33 checks passed against live Railway (32.3s).
 - [x] Added GitHub Actions manual live_url verification with saved artifacts.
+- [x] Cloud live-site job passed: https://github.com/sivica/sandbox/actions/runs/36892138248 (live job completed successfully; source job still running at this update).
 See [live report](evidence/live/REPORT.md). No physical device is currently connected; Mac lock blocks device streaming/browser access. Daily document-update automation awaits explicit recurrence approval after auto-review rejection.
 
 ## Evidence

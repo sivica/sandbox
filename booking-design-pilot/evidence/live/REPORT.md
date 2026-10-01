@@ -9,3 +9,5 @@ app.js, styles.css and index.html were downloaded and matched local source byte 
 GitHub Actions now accepts a live_url workflow-dispatch input, runs the same deployed-site checks and uploads booking-live-evidence artifacts for 14 days. Local report remains in playwright-report; tests can also run via BASE_URL npm test.
 
 Physical Android/iPhone follow-up blocked: ADB had no devices and Mac was locked, preventing Android Studio/device-cloud browser access. No paid access, billing or third-party contact occurred. Daily status automation was rejected by automatic approval review due to prior one-time instruction; explicit recurrence approval requested.
+
+Cloud live job completed successfully: https://github.com/sivica/sandbox/actions/runs/36892138248 . Downloaded booking-live-evidence artifacts. Source job was still running at this update.
