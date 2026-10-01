@@ -27,7 +27,7 @@ Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e1
 - [x] iPhone 17 Simulator / iOS 26.5 Safari booking and required-field validation checked. Fixed focus zoom with 16px form controls; fresh-tab confirmation fits. See [simulator evidence](evidence/iphone-simulator/REPORT.md).
 - [x] Physical Pixel fresh/repeated email-error captions captured on latest deployed source; audible listening remains open.
 - [x] Physical initial step 1 and simulated-failure captions captured; unavailable-slot visual recovery passed.
-- [ ] Physical iPhone Safari/VoiceOver. Playwright WebKit emulation is not an iPhone speech test.
+Physical iPhone Safari/VoiceOver testing is outside the pilot scope at the owner’s request; it is unverified and is not a remaining task.
 - [ ] Full screen-reader gesture/audio assessment; independent developer/buyer acceptance.
 
 ## Deployment

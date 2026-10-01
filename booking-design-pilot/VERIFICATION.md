@@ -14,7 +14,7 @@ Evidence recorded 30 September 2026. Packaging did not rerun application tests. 
 | TalkBack missing-name error | Captured as speech caption | [Name error](evidence/talkback-invalid-name.png) |
 | TalkBack email-error speech | Emulator captions captured | Fresh and repeated errors on new source; latest physical captions also captured; audible listening remains unverified |
 | Physical Android | Passed targeted earlier-deployment checks | [Physical report](evidence/physical/REPORT.md); email speech inconclusive |
-| iPhone/VoiceOver | Pending | Browser WebKit emulation is not physical VoiceOver |
+| Physical iPhone/VoiceOver | Outside pilot scope by owner request | Unverified; simulator Safari results are separate |
 | Landscape and 200% relative text | Targeted automated checks passed | Page/internal text overflow and button dimensions checked; screenshots inspected |
 | Full screen-reader gestures/listening | Pending | ADB input/captions are limited evidence |
 | Comprehensive contrast/accessibility audit | Pending | No conformance claim |
@@ -23,9 +23,9 @@ Evidence recorded 30 September 2026. Packaging did not rerun application tests. 
 
 ## Physical-device follow-up
 
-Owner supplies an Android phone with approved USB debugging, or performs guided Chrome/TalkBack checks. Use invented details. Verify forward/back headings and step speech, empty fields, fresh and repeated malformed email, correction, pending/confirmation, keyboard visibility, and normal gesture traversal. Record device/OS/browser/TalkBack versions and observations. Include iPhone VoiceOver if iPhone browser support is in scope. Remote Android ChatGPT access alone does not expose phone browser/TalkBack output to Codex.
+Owner supplies an Android phone with approved USB debugging, or performs guided Chrome/TalkBack checks. Use invented details. Verify forward/back headings and step speech, empty fields, fresh and repeated malformed email, correction, pending/confirmation, keyboard visibility, and normal gesture traversal. Record device/OS/browser/TalkBack versions and observations. Physical iPhone/VoiceOver testing is excluded from this pilot by owner request. Remote Android ChatGPT access alone does not expose phone browser/TalkBack output to Codex.
 
 ## Latest source revision
 See [current checklist](STATUS.md) for 1 October fixes, remaining tasks and deployment differences. The automated error-focus test establishes DOM timing, not a physical speech pass.
 
-Latest physical deployment follow-up: [Pixel report](evidence/physical-latest/REPORT.md) covers fresh/repeated email captions, initial step 1, failure caption, correction/confirmation and unavailable recovery. Full gesture/audio and iPhone remain open.
+Latest physical deployment follow-up: [Pixel report](evidence/physical-latest/REPORT.md) covers fresh/repeated email captions, initial step 1, failure caption, correction/confirmation and unavailable recovery. Full Android gesture/audio assessment remains open. Physical iPhone/VoiceOver is excluded from the pilot by owner request.
