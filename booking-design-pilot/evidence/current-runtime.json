@@ -1,0 +1,26 @@
+{
+  "checked_date": "2026-10-01",
+  "reviewed_source_commit": "f5f302b6b6ff07089887ef949ee92a8bf69f6bc9",
+  "runtime_deployment": "923c04de-22e3-474f-ac22-c04b0f3c01ab",
+  "scope": "Historical runtime comparison before buyer-requested menu-count and email-error changes. Does not describe the latest branch runtime.",
+  "files": [
+    {
+      "file": "index.html",
+      "matches_current_source": true,
+      "live_sha256": "5a2b839deed2e6102f3daf899d7b6986f942721c3deb0f0001f261bd35a8ab97",
+      "local_sha256": "5a2b839deed2e6102f3daf899d7b6986f942721c3deb0f0001f261bd35a8ab97"
+    },
+    {
+      "file": "app.js",
+      "matches_current_source": true,
+      "live_sha256": "afefa4f96547496d28b8975ffa37f6d456a55d4d1a2acc070879d8bb2b6e8bf9",
+      "local_sha256": "afefa4f96547496d28b8975ffa37f6d456a55d4d1a2acc070879d8bb2b6e8bf9"
+    },
+    {
+      "file": "styles.css",
+      "matches_current_source": true,
+      "live_sha256": "7275dbcec2e617ba39e7d57f0a0805343e59b6f159175a24ec29b56d25dcfd10",
+      "local_sha256": "7275dbcec2e617ba39e7d57f0a0805343e59b6f159175a24ec29b56d25dcfd10"
+    }
+  ]
+}

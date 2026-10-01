@@ -1,0 +1,14 @@
+{
+  "app.js": {
+    "match": true,
+    "sha256": "afefa4f96547496d28b8975ffa37f6d456a55d4d1a2acc070879d8bb2b6e8bf9"
+  },
+  "styles.css": {
+    "match": true,
+    "sha256": "65d4da4d19df8088388e8721d451963d645ed407a3aa165ade8db122e8ccbb43"
+  },
+  "index.html": {
+    "match": true,
+    "sha256": "93cefbe9c739f0453e1a31ce59805e1ce2ab44b27692cfedf14be40dc3bb4be7"
+  }
+}
