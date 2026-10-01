@@ -12,6 +12,8 @@ Separate from the reviewed `booking-design-pilot/` prototype. This version adds 
 - Only invented customer details and `example.com`, `example.org`, `example.net` or `.test` emails are accepted. No email, payment or real appointment is created.
 - Test bookings can be cancelled immediately using the browser's private booking token. A real cancellation policy is not implemented.
 
+Draft staging PR: https://github.com/sivica/sandbox/pull/2
+
 These are implementation defaults pending a buyer's actual rules. Seed rows are inserted once; edit business configuration deliberately through migrations/database administration. No public administration endpoint exists.
 
 ## Local setup
@@ -70,6 +72,8 @@ Railway project `a549eb28-d30d-4e2d-a8ff-f632fac46f24`, environment `staging`. S
 railway link --project a549eb28-d30d-4e2d-a8ff-f632fac46f24 --environment staging --service kindred-booking-staging
 railway up . --path-as-root --service kindred-booking-staging --environment staging --detach
 ```
+
+A private staging deployment is running; no public domain exists. Creating a public preview was blocked by automatic approval review pending explicit owner approval. CI/browser evidence and deployment identifiers are in STATUS.md and evidence/REPORT.md. The API readiness endpoint is implemented; Railway's platform healthcheck path is not yet configured.
 
 Check deployment health and intended environment before upload. Source pushes run CI but do not automatically deploy. Revert to a retained known-good app deployment if needed. Database rollback requires a separately planned migration; never drop booking tables as a routine rollback. PostgreSQL service/storage and API hosting incur Railway usage charges while running.
 

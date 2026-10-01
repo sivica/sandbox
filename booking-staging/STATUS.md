@@ -11,14 +11,12 @@
 - Unit, PostgreSQL integration and three-profile browser checks; separate GitHub Actions workflow.
 
 ## Verification and deployment
-Verified source: `45772d3bf7a83e635476ddb1867a3236d1dd5f0f`.
-- 5/5 date/calendar unit tests passed.
-- 8/8 PostgreSQL API scenarios passed (9 Node test results including the parent group).
-- 12/12 browser executions passed in 43.3s: 4 scenarios × Chromium mobile, WebKit mobile and Chromium landscape.
-- Both [push CI](https://github.com/sivica/sandbox/actions/runs/36933482947) and [PR CI](https://github.com/sivica/sandbox/actions/runs/36933530739) succeeded. Reports/screenshots downloaded and the saved-confirmation image inspected.
-- Private Railway deployment `15d72a0a-9ac7-490c-a45a-c35cc234266c` succeeded; logs confirm database migration/startup and ready server. No public domain exists, so live browser verification is not claimed.
-- Automatic approval review rejected creating a public staging domain because internet exposure needs explicit approval. Enable it only after the owner's approval.
-- Final formatting/evidence polish will be covered by the next CI run.
+Verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only edits preserve it.
+- 5/5 calendar checks, 8/8 PostgreSQL API scenarios (9 Node results including parent), 12/12 browser executions passed in 48.9s with no retries.
+- [Push CI](https://github.com/sivica/sandbox/actions/runs/36934271659) and [PR CI](https://github.com/sivica/sandbox/actions/runs/36934277944) succeeded. Downloaded evidence and settled confirmation inspected; see [report](evidence/REPORT.md).
+- Private Railway deployment `3dd0fe52-d5e1-43fc-bb00-73480d5d8307` succeeded; logs show server ready after migrations.
+- No public staging domain exists; no deployed-browser check is claimed. Automatic approval review requires explicit owner approval for internet exposure.
+- The API implements /health and CI uses it for readiness; Railway's platform healthcheck path remains unconfigured. Configure/verify that before real customer launch alongside monitoring.
 
 
 ## Remaining for real customer use
