@@ -6,7 +6,7 @@ Updated 1 October 2026. Delivery: design prototype for review and implementation
 
 - Live concept: https://booking-design-pilot-production.up.railway.app/
 - Draft PR: https://github.com/sivica/sandbox/pull/1
-- Published source baseline: `1d25ab1668513275a896b844f38a4a9debd9f07d`, folder `booking-design-pilot/`.
+- Retrieve the current `booking-design-pilot` branch, folder `booking-design-pilot/`. Record `git rev-parse HEAD` before review. The receiving-developer agent reviewed `f5f302b6b6ff07089887ef949ee92a8bf69f6bc9`; subsequent documentation corrections preserve its application runtime.
 - Latest source adds browser tests, error-focus timing correction, semantic progress markup and relative text sizes. Railway deployment now matches the latest runtime; 33/33 live checks passed. See evidence/live/REPORT.md.
 - Start with `STATUS.md` for completed and remaining work; `AUTOMATION.md` explains repeatable tests.
 - Read `VERIFICATION.md`, `ACCEPTANCE.md` and `DEPLOYMENT.md` in this source folder.
@@ -59,7 +59,9 @@ The version switch compares a constructed illustrative draft with the reviewed l
 
 Browser regression checks at 360px and 390px covered the five screens, pending control lock, validated confirmation, native email rejection, first-invalid-field focus, failure/retry and unavailable recovery. Android API 36 Chrome emulator checks covered five-screen portrait use, keyboard/email correction, pending rendering, back retention and recovery.
 
-TalkBack captions on the emulator and physical Pixel confirmed steps 2–5 and required-name speech. Physical Pixel validation/back/failure retry passed targeted checks on the earlier deployment. Email-error speech remains inconclusive. New source has 21 passing local browser executions and normal-screen axe checks; it is not yet deployed. Independent human acceptance remains open. Full Android gesture/audio assessment is deferred by owner request and is not a prototype handoff blocker. Physical iPhone/VoiceOver testing is outside the pilot scope by owner request and remains unverified. See STATUS.md and VERIFICATION.md for exact evidence boundaries.
+The receiving-developer agent ran a clean export of f5f302b: 33/33 local executions passed in 26.1s. The post-Safari-fix live suite passed 33/33 in 32.7s. Runtime HTML/JavaScript/CSS match that reviewed source; see evidence/current-runtime.json. USB Android failure-to-success retry retained the entered details, treatment and time. iPhone Simulator Safari booking/validation passed after the 16px form-control fix.
+
+TalkBack captions on emulator and physical Pixel supply partial step/error evidence. Owner confirmed audible speech and treatment heading/step-2 announcement on USB Android; full listening and gesture assessment is deferred and nonblocking. Physical iPhone/VoiceOver is excluded by owner request and unverified. Agent review accepted with documentation conditions; independent human developer and buyer acceptance remain pending. See STATUS.md and VERIFICATION.md.
 
 ## Production planning
 

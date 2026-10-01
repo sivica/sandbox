@@ -1,55 +1,42 @@
 # Source and deployment
 
-## Canonical published baseline
-
+## Retrieve current handoff
 Repository: https://github.com/sivica/sandbox
-
-Draft PR: https://github.com/sivica/sandbox/pull/1 (open, draft; checked 30 September 2026).
-
-Branch: booking-design-pilot. Published baseline: `1d25ab1668513275a896b844f38a4a9debd9f07d`. Application fixes originated at `8d899de68ea58c5d1b15e88f58d24ad5542ca96f`.
-
-To retrieve that baseline into a new directory:
+Draft PR: https://github.com/sivica/sandbox/pull/1
 
 ```sh
-git clone https://github.com/sivica/sandbox.git sandbox-handoff
+git clone --branch booking-design-pilot https://github.com/sivica/sandbox.git sandbox-handoff
 cd sandbox-handoff
-git checkout 1d25ab1668513275a896b844f38a4a9debd9f07d
+git rev-parse HEAD
 cd booking-design-pilot
 ```
 
-The runtime source has byte-identical app.js, index.html, styles.css, Dockerfile, Caddyfile and .dockerignore. This documentation revision updates the handoff, effort caveats and supporting delivery documents. Source provenance hashes are in evidence/source-provenance.json. Use repository history to identify the current documentation revision; the baseline above identifies unchanged application behavior.
+Use the branch tip for the corrected handoff. The receiving-developer agent reviewed f5f302b6b6ff07089887ef949ee92a8bf69f6bc9; subsequent documentation corrections preserve that runtime. See evidence/current-runtime.json for current application hashes. Historical baseline 1d25ab1668513275a896b844f38a4a9debd9f07d lacks today's test package and contains older runtime/container files. evidence/source-provenance.json and evidence/live/source-match.json describe historical revisions only.
 
-## Existing Railway service
-
-- Project: booking-design-pilot, `a549eb28-d30d-4e2d-a8ff-f632fac46f24`.
-- Service: booking-design-pilot, `b3de0d08-f5a2-463a-9bed-73bca41fa7e6`.
-- Environment name: production (this is the Railway environment label; the application is a concept).
-- Existing deployment: `97470c00-d560-4eeb-902a-3a193700368b`, created 30 September 2026 16:14 UTC; status SUCCESS and instance RUNNING at packaging.
-- URL: https://booking-design-pilot-production.up.railway.app/
+## Railway
+- Project: a549eb28-d30d-4e2d-a8ff-f632fac46f24.
+- Service: booking-design-pilot, b3de0d08-f5a2-463a-9bed-73bca41fa7e6.
+- Environment: production (Railway label; app is a prototype).
+- Live: https://booking-design-pilot-production.up.railway.app/
 - Dashboard: https://railway.com/project/a549eb28-d30d-4e2d-a8ff-f632fac46f24
-- Workspace owner: Ivica Stojanoski. Receiving-developer access must be supplied by the owner; no credentials are packaged.
+- Verified application deployment: 923c04de-22e3-474f-ac22-c04b0f3c01ab, including Safari 16px controls/versioned CSS. Live suite passed 33/33 in 32.7s.
 
-Deployment is a manual CLI upload. Railway reports no connected repository source, so pushing the PR does not automatically redeploy this service. No application secrets/database are required by the prototype. Caddy listens on PORT, default 8080; Railway domain targets port 8080 and terminates HTTPS. No explicit healthcheck path is configured.
+Documentation refreshes preserve these application files. For the latest upload ID and health consult Railway's deployment history. Public HANDOFF.md and other delivery documents are copied into the same container. Owner supplies receiving-developer account access; no credentials are packaged.
 
-## Redeploy after approved changes
-
-Install/use Railway CLI and authenticate with an authorized account. From the repository booking-design-pilot/ folder:
+## Deploy
+From booking-design-pilot/ with an authorized Railway CLI account:
 
 ```sh
 railway link --project a549eb28-d30d-4e2d-a8ff-f632fac46f24 --service booking-design-pilot --environment production
 railway status
-railway up --service booking-design-pilot --environment production --detach
+railway up . --path-as-root --service booking-design-pilot --environment production --detach
 ```
 
-Confirm project/service before uploading. Detached upload returns before deployment health is known. Check the deployment status and logs in Railway, then verify the intended revision and live behavior. The publication workflow redeploys this documentation revision; consult Railway for its resulting deployment status.
+Check deployment status/logs after upload, then compare live application and handoff files against the intended checkout. Caddy listens on PORT (default 8080), Railway terminates HTTPS. No explicit healthcheck path, application secrets or database are configured.
 
-## Rollback
+GitHub Actions runs source checks on branch pushes/PR changes and manual dispatch. Manual live_url adds deployed-site verification. There is no repository autodeploy or recurring schedule.
 
-In the service's Deployments view, select an earlier retained successful deployment and use the available rollback/redeploy control. Confirm the service becomes successful and the live application matches the intended version. If no suitable deployment is retained, retrieve the known-good baseline above and manually deploy from its booking-design-pilot/ folder. This creates a new deployment; the published baseline includes older handoff documentation. Rollback procedure is documented, not exercised.
+## Rollback and reproducibility
+Select a retained successful deployment in Railway and use rollback/redeploy; verify its status and expected files. Alternatively check out a known-good revision and upload its app folder explicitly. Choose f5f302b for the reviewed application; its documentation predates these corrections. Rollback is documented, not exercised.
 
-## Reproducibility limits
-
-React versions are named but load remotely at runtime; Google Fonts is also external. Docker uses `caddy:2-alpine`, a mutable tag. A new build can resolve different container/dependency artifacts. Before maintained production delivery, agree a local bundled build, lockfile, image digest/version and asset/font policy. No CI/autodeploy was added.
-
-## Current verified deployment — 1 October 2026
-Deployment f0f52472-a1b7-401b-b10a-da8b0d65b812 succeeded. Runtime files match source a2e132a4ca71a4c489c442c77a437f61abad0b81; 33/33 live checks passed. Earlier baseline descriptions above are historical. For this repository, deploy the app folder explicitly with `railway up . --path-as-root --service booking-design-pilot --environment production --detach`. The manual live_url GitHub Actions job verifies deployed behavior; no source autodeploy or recurring schedule is enabled. See evidence/live/REPORT.md.
+React and fonts load remotely; caddy:2-alpine is mutable. Test dependencies have a committed lockfile, but maintained production delivery still needs bundled runtime dependencies, an image digest/version and agreed asset/font/release policies.

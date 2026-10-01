@@ -16,7 +16,7 @@ The suite serves the local source with a loopback-only Node server. Set BASE_URL
 
 The first regression recorded null error description at focus on original source. Focus now runs after React commits the error markup. Original progress spans also failed axe aria-prohibited-attr; semantic list items now carry the names/current state. Contrast scans wait for the screen fade to complete to assess its settled state. No rule was disabled.
 
-The suite does not prove audible speech, full gesture navigation, physical iOS behavior or all WCAG requirements. Internal text-range overflow and minimum button dimensions are checked at 200% text; enlarged screenshots were inspected. Native select options and hidden text are excluded. Emulator fresh/repeated email speech captions were captured; physical email speech remains inconclusive pending retest. Earlier physical results apply to the previously deployed revision.
+The suite does not prove audible speech, full gesture navigation, physical iOS behavior or all WCAG requirements. Internal text-range overflow and minimum button dimensions are checked at 200% text; enlarged screenshots were inspected. Native select options and hidden text are excluded. Emulator fresh/repeated email speech captions were captured; latest physical email captions are captured, while full listening/gesture assessment is deferred. USB Android current-live failure/retry passed; earlier Pixel evidence retains its historical revision boundary.
 
 Saved evidence: [baseline](evidence/automation/baseline-focus-failure.md), [WebKit confirmation](evidence/automation/webkit-confirmation.png), [200% text](evidence/automation/webkit-enlarged-confirmation.png).
 
@@ -25,4 +25,4 @@ Additional scenarios verify keyboard-only form traversal/Enter submission and ax
 Prior 27-test suite passed cloud CI twice. Expanded suite also passed 33/33 in [GitHub Actions](https://github.com/sivica/sandbox/actions/runs/36788827176) (47.3s); result and source SHA are in [STATUS.md](STATUS.md). See [overnight evidence](evidence/overnight/REPORT.md).
 
 ## Live-site verification
-33/33 executions passed against Railway on 1 October (32.3s). [Evidence](evidence/live/REPORT.md). For cloud replay, manually dispatch Booking browser verification on booking-design-pilot and set live_url to https://booking-design-pilot-production.up.railway.app/. Both source and live jobs run; live artifacts are named booking-live-evidence. No recurring cloud schedule is enabled.
+33/33 executions passed against Railway on 1 October after the Safari fix (32.7s). [Evidence](evidence/live/REPORT.md). For cloud replay, manually dispatch Booking browser verification on booking-design-pilot and set live_url to https://booking-design-pilot-production.up.railway.app/. Both source and live jobs run; live artifacts are named booking-live-evidence. No recurring cloud schedule is enabled.

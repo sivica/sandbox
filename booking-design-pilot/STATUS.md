@@ -25,23 +25,22 @@ Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e1
 ## Requires device or human access
 - [x] Owner's USB Android phone: latest live failure-to-success retry passed with retained details, treatment and time; temporary UI dump removed. See [USB phone evidence](evidence/usb-phone/REPORT.md). Earlier cloud Pixel erase remains unobserved.
 - [x] iPhone 17 Simulator / iOS 26.5 Safari booking and required-field validation checked. Fixed focus zoom with 16px form controls; fresh-tab confirmation fits. See [simulator evidence](evidence/iphone-simulator/REPORT.md).
-- [x] Physical Pixel fresh/repeated email-error captions captured on latest deployed source; audible listening remains open.
+- [x] Physical Pixel fresh/repeated email-error captions captured on latest deployed source; full audible assessment is deferred.
 - [x] Physical initial step 1 and simulated-failure captions captured; unavailable-slot visual recovery passed.
 Physical iPhone Safari/VoiceOver testing is outside the pilot scope at the owner’s request; it is unverified and is not a remaining task.
 - [ ] Independent developer/buyer acceptance.
 
 Full TalkBack listening and gesture assessment is deferred by owner request and does not block the design prototype handoff. The owner confirmed audible speech and the treatment heading/step-2 announcement on the USB phone; this is partial evidence, not a full assessment.
 
-## Deployment
-- [x] Latest runtime deployed to Railway: f0f52472-a1b7-401b-b10a-da8b0d65b812.
-- [x] HTML/JavaScript/CSS match source a2e132a byte for byte.
-- [x] 33/33 checks passed against live Railway (32.3s).
-- [x] Added GitHub Actions manual live_url verification with saved artifacts.
-- [x] Cloud live-site job passed: https://github.com/sivica/sandbox/actions/runs/36892138248 (live job completed successfully; source job still running at this update).
-Safari form sizing and a versioned stylesheet were subsequently deployed successfully in `923c04de-22e3-474f-ac22-c04b0f3c01ab`. BrowserStack sign-in succeeded; its iPhone 16 trial expired before app verification and its screen-reader panel reported unsupported on that device.
-Live suite with the input-size regression assertion: **33/33 passed in 32.7s** after that deployment.
+## Current deployment and receiving-developer review
+- [x] Safari runtime deployed successfully in 923c04de-22e3-474f-ac22-c04b0f3c01ab; current application hashes in [runtime manifest](evidence/current-runtime.json).
+- [x] Post-fix live suite: 33/33 passed in 32.7s. Prior cloud live job passed: https://github.com/sivica/sandbox/actions/runs/36892138248 . That cloud run predates the Safari change.
+- [x] Receiving-developer agent reviewed f5f302b from a clean export: 33/33 passed in 26.1s; accepted with documentation conditions.
+- [x] Corrected default checkout, public handoff scope and contradictory evidence summaries. Application files are unchanged by these corrections.
+- [ ] Independent human developer and buyer acceptance remain pending; agent assessment does not replace these.
 
-See [live report](evidence/live/REPORT.md). Physical Pixel follow-up completed after unlock; see [latest physical evidence](evidence/physical-latest/REPORT.md). Mac relocked before explicit device return. Daily document-update automation awaits explicit recurrence approval after auto-review rejection.
+## Future production scope
+Real booking APIs, persistence, authoritative dates/slots and a maintained bundled runtime need separate scoping and implementation.
 
 ## Evidence
 See [automated verification](AUTOMATION.md), [physical report](evidence/physical/REPORT.md), and [verification matrix](VERIFICATION.md), and [overnight report](evidence/overnight/REPORT.md). The physical streaming serial is no longer present in ADB; explicit remote erase was not observed.

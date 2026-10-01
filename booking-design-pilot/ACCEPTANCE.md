@@ -1,6 +1,6 @@
 # Acceptance and remaining work
 
-Status: prepared for receiving-developer review. Roles below are proposed responsibilities; named assignees and acceptance have not been agreed.
+Status: receiving-developer agent review accepted with documentation conditions; these conditions are corrected in this delivery. Independent human developer and buyer acceptance remain pending. Roles below are proposed responsibilities; named assignees and acceptance have not been agreed.
 
 ## Concept acceptance
 
@@ -9,9 +9,9 @@ Status: prepared for receiving-developer review. Roles below are proposed respon
 | Scope and source behavior documented | Corrected | Receiving developer confirms understanding |
 | Runnable five-screen flow | Verified in existing targeted checks | Receiving developer retrieves package and runs locally |
 | Demo states and validation | Existing verification evidence | Review automated validation/recovery evidence |
-| Deployment and source provenance | New source differs from earlier Railway deployment | Owner gives developer Railway access if needed |
-| Screen-reader step/name speech | Limited emulator evidence | Developer reviews evidence boundaries |
-| Physical Android | Targeted earlier-deployment checks complete | Review linked physical evidence; retest new source |
+| Deployment and source provenance | Reviewed application matches current Railway runtime | Owner gives developer Railway access if needed |
+| Screen-reader step/name speech | Partial emulator/physical captions and owner-confirmed speech | Developer reviews evidence boundaries |
+| Physical Android | USB Android current-live retry complete | Review linked USB and Pixel evidence |
 | Android screen-reader listening and gestures | Full assessment deferred by owner request | Not a prototype handoff blocker; captions and owner-confirmed speech are partial evidence. Physical iPhone/VoiceOver is outside pilot scope. |
 | Format useful for target platform | Unconfirmed | Buyer/developer chooses React web or native delivery |
 | Consolidated revision and final acceptance | Pending | Buyer/developer supplies one feedback list and signs off |
