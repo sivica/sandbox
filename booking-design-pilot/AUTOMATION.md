@@ -23,3 +23,6 @@ Saved evidence: [baseline](evidence/automation/baseline-focus-failure.md), [WebK
 Additional scenarios verify keyboard-only form traversal/Enter submission and axe checks on validation, failed submission and unavailable states. WebKit uses Option+Tab to include the submit button under its default keyboard policy. The text-size check asserts that the heading actually doubles. No audible screen-reader pass is inferred.
 
 Prior 27-test suite passed cloud CI twice. Expanded suite also passed 33/33 in [GitHub Actions](https://github.com/sivica/sandbox/actions/runs/36788827176) (47.3s); result and source SHA are in [STATUS.md](STATUS.md). See [overnight evidence](evidence/overnight/REPORT.md).
+
+## Live-site verification
+33/33 executions passed against Railway on 1 October (32.3s). [Evidence](evidence/live/REPORT.md). For cloud replay, manually dispatch Booking browser verification on booking-design-pilot and set live_url to https://booking-design-pilot-production.up.railway.app/. Both source and live jobs run; live artifacts are named booking-live-evidence. No recurring cloud schedule is enabled.

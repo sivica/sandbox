@@ -7,7 +7,7 @@ Updated 1 October 2026. Delivery: design prototype for review and implementation
 - Live concept: https://booking-design-pilot-production.up.railway.app/
 - Draft PR: https://github.com/sivica/sandbox/pull/1
 - Published source baseline: `1d25ab1668513275a896b844f38a4a9debd9f07d`, folder `booking-design-pilot/`.
-- Latest source adds browser tests, error-focus timing correction, semantic progress markup and relative text sizes. Railway deployment remains the earlier baseline until separately verified.
+- Latest source adds browser tests, error-focus timing correction, semantic progress markup and relative text sizes. Railway deployment now matches the latest runtime; 33/33 live checks passed. See evidence/live/REPORT.md.
 - Start with `STATUS.md` for completed and remaining work; `AUTOMATION.md` explains repeatable tests.
 - Read `VERIFICATION.md`, `ACCEPTANCE.md` and `DEPLOYMENT.md` in this source folder.
 

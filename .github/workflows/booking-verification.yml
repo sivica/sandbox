@@ -6,6 +6,11 @@ on:
     branches: ['booking-design-pilot']
     paths: ['booking-design-pilot/**', '.github/workflows/booking-verification.yml']
   workflow_dispatch:
+    inputs:
+      live_url:
+        description: 'Optional deployed prototype URL to verify'
+        required: false
+        type: string
 permissions:
   contents: read
 jobs:
@@ -29,6 +34,34 @@ jobs:
         if: always()
         with:
           name: booking-browser-evidence
+          path: |
+            booking-design-pilot/playwright-report/
+            booking-design-pilot/test-results/
+          retention-days: 14
+
+  live:
+    if: github.event_name == 'workflow_dispatch' && inputs.live_url != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: booking-design-pilot
+    env:
+      BASE_URL: ${{ inputs.live_url || 'https://booking-design-pilot-production.up.railway.app/' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: booking-design-pilot/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: booking-live-evidence
           path: |
             booking-design-pilot/playwright-report/
             booking-design-pilot/test-results/

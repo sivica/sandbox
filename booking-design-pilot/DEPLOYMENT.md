@@ -50,3 +50,6 @@ In the service's Deployments view, select an earlier retained successful deploym
 ## Reproducibility limits
 
 React versions are named but load remotely at runtime; Google Fonts is also external. Docker uses `caddy:2-alpine`, a mutable tag. A new build can resolve different container/dependency artifacts. Before maintained production delivery, agree a local bundled build, lockfile, image digest/version and asset/font policy. No CI/autodeploy was added.
+
+## Current verified deployment — 1 October 2026
+Deployment f0f52472-a1b7-401b-b10a-da8b0d65b812 succeeded. Runtime files match source a2e132a4ca71a4c489c442c77a437f61abad0b81; 33/33 live checks passed. Earlier baseline descriptions above are historical. For this repository, deploy the app folder explicitly with `railway up . --path-as-root --service booking-design-pilot --environment production --detach`. The manual live_url GitHub Actions job verifies deployed behavior; no source autodeploy or recurring schedule is enabled. See evidence/live/REPORT.md.

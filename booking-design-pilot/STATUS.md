@@ -29,7 +29,11 @@ Expanded suite: **33/33 passed in GitHub Actions** on source `449993109e1804e1e1
 - [ ] Full screen-reader gesture/audio assessment; independent developer/buyer acceptance.
 
 ## Deployment
-The new fixes are in the draft PR source. Railway still serves the earlier manual deployment until a new deployment is verified. Browser tests against localhost do not certify current Railway bytes.
+- [x] Latest runtime deployed to Railway: f0f52472-a1b7-401b-b10a-da8b0d65b812.
+- [x] HTML/JavaScript/CSS match source a2e132a byte for byte.
+- [x] 33/33 checks passed against live Railway (32.3s).
+- [x] Added GitHub Actions manual live_url verification with saved artifacts.
+See [live report](evidence/live/REPORT.md). No physical device is currently connected; Mac lock blocks device streaming/browser access. Daily document-update automation awaits explicit recurrence approval after auto-review rejection.
 
 ## Evidence
 See [automated verification](AUTOMATION.md), [physical report](evidence/physical/REPORT.md), and [verification matrix](VERIFICATION.md), and [overnight report](evidence/overnight/REPORT.md). The physical streaming serial is no longer present in ADB; explicit remote erase was not observed.

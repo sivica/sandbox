@@ -6,7 +6,7 @@ Live concept: https://booking-design-pilot-production.up.railway.app/
 
 Run locally from this folder with `python3 -m http.server 8765`, then open http://localhost:8765 . Use invented details only. This is a web design prototype, with no real booking or payment.
 
-Latest source contains error-focus timing, semantic progress and relative-text fixes with automated verification. Railway serves the earlier baseline. Emulator email-error captions passed; physical-device retest and receiving-developer acceptance remain open.
+Latest source contains error-focus timing, semantic progress and relative-text fixes with automated verification. Railway now serves the verified latest runtime; see evidence/live/REPORT.md. Emulator email-error captions passed; physical-device retest and receiving-developer acceptance remain open.
 
 ## Current status and tests
 Read [STATUS.md](STATUS.md) and [AUTOMATION.md](AUTOMATION.md) for the latest checks and remaining work.
