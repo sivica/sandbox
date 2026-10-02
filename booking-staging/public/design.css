@@ -1,0 +1,26 @@
+/* Generated from booking-design-workflow/design-tokens.json. */
+:root[data-design="calm-spa"] {--ink:#243d35;--muted:#52645b;--paper:#fffdf8;--line:#d6dfd5;--accent:#244f40;--soft:#eaf0e4;--canvas:#e6ebe4;--radius:22px;--space:24px;--heading:Georgia, serif;background:var(--canvas);}
+:root[data-design="clean-clinic"] {--ink:#15364c;--muted:#486271;--paper:#ffffff;--line:#cddde6;--accent:#165b7a;--soft:#eaf5fa;--canvas:#e7eff4;--radius:10px;--space:24px;--heading:system-ui, sans-serif;background:var(--canvas);}
+:root[data-design="modern-boutique"] {--ink:#3e2947;--muted:#67566e;--paper:#fffafc;--line:#e6d6e1;--accent:#693855;--soft:#f4e6ed;--canvas:#efe6ee;--radius:16px;--space:24px;--heading:Georgia, serif;background:var(--canvas);}
+
+.brand,h1 {font-family:var(--heading,Georgia,serif)}
+.brand {letter-spacing:-1.1px;font-weight:600}
+h1 {font-weight:500;line-height:1.15;font-size:2.15rem}
+.hero {padding:18px 22px 20px;background:linear-gradient(140deg,var(--soft),var(--paper));border:1px solid var(--line)}
+.hero h1 {font-size:2.1rem;max-width:240px}
+.eyebrow {font-size:.68rem;letter-spacing:1.4px}
+.service-copy small,footer {font-size:.68rem}
+.service-card {background:var(--paper);padding:20px 16px;box-shadow:0 4px 16px #243d3508}
+.detail-art {background:var(--soft);border:1px solid var(--line)}
+.phone {border-color:var(--line)}
+.primary {border-radius:var(--radius);box-shadow:0 4px 12px #243d3518}
+.primary:hover:not(:disabled) {filter:brightness(1.12)}
+.choice:hover:not(:disabled):not(.selected) {background:var(--soft)}
+.field input,.field select,.field textarea {border-color:var(--line)}
+form>label:not(.field) {display:block;font-size:.8rem;font-weight:600}
+form>label:not(.field)>select {display:block;min-height:48px;width:100%;margin:8px 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font-size:1rem}
+:root[data-design="clean-clinic"] h1 {font-weight:700;letter-spacing:-.8px}
+:root[data-design="clean-clinic"] .hero-art {display:none}
+:root[data-design="modern-boutique"] .hero {border-radius:32px 8px 32px 8px}
+:root[data-design="modern-boutique"] .service-card {border-left:4px solid var(--accent)}
+@media(max-width:720px){.phone{width:100%;max-width:430px}.review-panel{max-width:430px}.screen{min-height:560px}}

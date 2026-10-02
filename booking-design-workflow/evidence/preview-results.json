@@ -1,0 +1,50 @@
+[
+  {
+    "engine": "chromium",
+    "theme": "calm-spa",
+    "screens": 6,
+    "reload": true,
+    "cancel": true,
+    "axe": "pass"
+  },
+  {
+    "engine": "chromium",
+    "theme": "clean-clinic",
+    "screens": 6,
+    "reload": true,
+    "cancel": true,
+    "axe": "pass"
+  },
+  {
+    "engine": "chromium",
+    "theme": "modern-boutique",
+    "screens": 6,
+    "reload": true,
+    "cancel": true,
+    "axe": "pass"
+  },
+  {
+    "engine": "webkit",
+    "theme": "calm-spa",
+    "screens": 6,
+    "reload": true,
+    "cancel": true,
+    "axe": "pass"
+  },
+  {
+    "engine": "webkit",
+    "theme": "clean-clinic",
+    "screens": 6,
+    "reload": true,
+    "cancel": true,
+    "axe": "pass"
+  },
+  {
+    "engine": "webkit",
+    "theme": "modern-boutique",
+    "screens": 6,
+    "reload": true,
+    "cancel": true,
+    "axe": "pass"
+  }
+]
