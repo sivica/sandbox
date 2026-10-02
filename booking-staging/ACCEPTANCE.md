@@ -2,6 +2,8 @@
 
 Status: staging is verified; production approval is pending.
 
+A candidate-based, unbranded [pilot specification](PILOT-SPEC.md) is ready for owner review. Its public facts are not approved business rules.
+
 ## Buyer decisions
 
 - Name the real calendar/provider and business owner.
