@@ -35,7 +35,7 @@ No human acceptance is recorded yet. Automated or role-play reviews do not repla
 ## Operational automation
 
 Cloud: Railway checks staging every five minutes even when the Mac sleeps.
-Chat follow-up: pending configuration; depends on the Mac and Codex being available.
+Chat follow-up: active hourly automation “Kindred staging follow-up”; checks health, CI and actionable staging work, and reports only meaningful changes. Depends on the Mac and Codex being available.
 Snapshots: current Railway OAuth grant refused scheduling/creation. Reauthorize Railway for this project or enable daily/weekly snapshots in its dashboard, then verify the result. No SSH credentials are required or registered for this flow.
 
 Do not launch for real customers until production decisions and acceptance are recorded. Keep real customer data out of staging.
