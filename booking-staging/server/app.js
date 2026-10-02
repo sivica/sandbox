@@ -32,7 +32,7 @@ const publicService = (s) => ({
 const fail = (status, message, code) =>
   Object.assign(new Error(message), { status, code });
 
-async function calendarData(client, serviceId, date, now) {
+export async function calendarData(client, serviceId, date, now) {
   const {
     rows: [resource],
   } = await client.query("SELECT * FROM resources WHERE id=$1 AND active", [
@@ -59,12 +59,24 @@ async function calendarData(client, serviceId, date, now) {
   const slots = candidates(
     date,
     resource.timezone,
-    hours,
+    hours
+      ? {
+          ...hours,
+          lunch_opens: resource.lunch_opens,
+          lunch_closes: resource.lunch_closes,
+        }
+      : null,
     service.minutes,
     now,
+    {
+      ...RULES,
+      leadMinutes: resource.lead_minutes,
+      bufferBefore: resource.buffer_before,
+      bufferAfter: resource.buffer_after,
+    },
   );
   const { rows: busy } = await client.query(
-    "SELECT starts_at,ends_at FROM bookings WHERE resource_id=$1 AND status='confirmed' AND starts_at < $3::timestamptz AND ends_at > $2::timestamptz",
+    "SELECT starts_at,ends_at FROM calendar_entries WHERE resource_id=$1 AND active AND starts_at < $3::timestamptz AND ends_at > $2::timestamptz",
     [
       RESOURCE,
       DateTime.fromISO(date, { zone: resource.timezone })
@@ -85,6 +97,7 @@ export function createApp({
   pool,
   tokenSecret,
   adminPasswordHash,
+  supportPasswordHash,
   now = () => DateTime.utc(),
   rateLimit = 180,
 } = {}) {
@@ -143,7 +156,15 @@ export function createApp({
     next();
   });
   app.use(express.json({ limit: "8kb", strict: true }));
-  installAdmin(app, { pool, tokenSecret, adminPasswordHash });
+  installAdmin(app, {
+    pool,
+    tokenSecret,
+    adminPasswordHash,
+    supportPasswordHash,
+    now,
+    calendarData,
+    responseLookup: null,
+  });
   app.get("/health", async (req, res) => {
     try {
       await pool.query("SELECT 1");
@@ -168,6 +189,10 @@ export function createApp({
         timezone: resource.timezone,
         ...dateBounds(resource.timezone, now()),
         ...RULES,
+        profile: resource.profile,
+        leadMinutes: resource.lead_minutes,
+        bufferBefore: resource.buffer_before,
+        bufferAfter: resource.buffer_after,
         syntheticOnly: true,
       },
     });
@@ -246,6 +271,11 @@ export function createApp({
         "Staging accepts only example.com/org/net or .test email addresses. Use invented details.",
         "synthetic_email",
       );
+    if (
+      raw.contactRoute &&
+      !["email", "messaging", "phone"].includes(raw.contactRoute)
+    )
+      throw fail(400, "Choose a contact route.");
     if (note.length > 1000)
       throw fail(400, "Keep the note within 1000 characters.", "invalid_note");
     if (
@@ -260,6 +290,7 @@ export function createApp({
       name,
       email,
       note,
+      ...(raw.contactRoute ? { contactRoute: raw.contactRoute } : {}),
       serviceId: raw.serviceId,
       startsAt: start.toUTC().toISO(),
     });
@@ -315,8 +346,8 @@ export function createApp({
       const id = randomUUID(),
         token = tokenFor({ id, idempotency_key: key });
       await client.query(
-        `INSERT INTO bookings(id,reference,service_id,resource_id,starts_at,ends_at,price_cents,currency,name,email,note,idempotency_key,request_hash,access_token_hash)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        `INSERT INTO bookings(id,reference,service_id,resource_id,starts_at,ends_at,price_cents,currency,name,email,note,idempotency_key,request_hash,access_token_hash,occupied_from,occupied_until,contact_route)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
         [
           id,
           `STG-${id}`,
@@ -332,6 +363,9 @@ export function createApp({
           key,
           requestHash,
           hash(token),
+          slot.occupiedFrom,
+          slot.occupiedUntil,
+          raw.contactRoute || "email",
         ],
       );
       const row = await lookup(client, id);
@@ -367,6 +401,30 @@ export function createApp({
   );
   app.post("/api/bookings/:id/cancel", async (req, res) => {
     const row = await authorizedBooking(req);
+    const {
+      rows: [resource],
+    } = await pool.query("SELECT profile FROM resources WHERE id=$1", [
+      RESOURCE,
+    ]);
+    if (
+      row.status === "confirmed" &&
+      resource.profile === "simulated" &&
+      DateTime.fromJSDate(new Date(row.starts_at)).diff(now(), "minutes")
+        .minutes < 1440
+    ) {
+      await pool.query(
+        "UPDATE bookings SET late_cancel_requested=true WHERE id=$1",
+        [row.id],
+      );
+      return res
+        .status(202)
+        .json({
+          booking: responseFor(row),
+          ownerRequest: true,
+          message:
+            "Late cancellation requested. Your appointment remains reserved until the owner records cancellation.",
+        });
+    }
     await pool.query(
       "UPDATE bookings SET status='cancelled',cancelled_at=COALESCE(cancelled_at,now()) WHERE id=$1",
       [row.id],

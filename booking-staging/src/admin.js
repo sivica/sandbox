@@ -132,6 +132,10 @@ async function signed(data) {
   csrf = data.csrf;
   $("login").hidden = true;
   $("panel").hidden = false;
+  if (data.role === "viewer") {
+    location.href = "/demo.html";
+    return;
+  }
   await load();
 }
 $("signin").onsubmit = (e) => {

@@ -339,3 +339,287 @@ test("real PostgreSQL booking API: persistence, concurrency, retries, protection
     await pool.end();
   }
 });
+test("fictional demo scenarios, occupied resources, roles, retention and logs", async () => {
+  const pool = createPool();
+  await migrate(pool);
+  let clock = DateTime.fromISO("2026-10-01T00:00:00Z");
+  const resource = (
+      await pool.query("SELECT * FROM resources WHERE id='studio-room'")
+    ).rows[0],
+    oldHours = (
+      await pool.query(
+        "SELECT * FROM opening_hours WHERE resource_id='studio-room'",
+      )
+    ).rows,
+    oldServices = (await pool.query("SELECT id,active FROM services")).rows;
+  const app = createApp({
+    pool,
+    tokenSecret: process.env.BOOKING_TOKEN_SECRET,
+    adminPasswordHash: await passwordHash("demo-owner"),
+    supportPasswordHash: await passwordHash("demo-support"),
+    now: () => clock,
+    rateLimit: 10000,
+  });
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise((r) => server.on("listening", r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  let cookie, csrf;
+  const ids = [],
+    blocks = [];
+  const call = async (path, body, headers = {}) => {
+    const r = await fetch(base + path, {
+      method: body ? "POST" : "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(cookie ? { Cookie: cookie, "X-CSRF-Token": csrf } : {}),
+        ...headers,
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    return {
+      status: r.status,
+      body: r.headers.get("content-type")?.includes("json")
+        ? await r.json()
+        : await r.text(),
+      headers: r.headers,
+    };
+  };
+  try {
+    const login = await call("/api/admin/login", {
+      username: "owner",
+      password: "demo-owner",
+    });
+    assert.equal(login.status, 200);
+    cookie = login.headers.get("set-cookie").split(";")[0];
+    csrf = login.body.csrf;
+    assert.equal(
+      (
+        await call("/api/admin/demo/profile", {
+          confirmation: "USE FICTIONAL DEMO RULES",
+        })
+      ).status,
+      200,
+    );
+    const catalog = await call("/api/services");
+    assert.equal(catalog.body.services.length, 1);
+    assert.equal(catalog.body.services[0].currency, "MKD");
+    assert.equal(catalog.body.services[0].price, 1400);
+    const slots = (
+      await call("/api/slots?serviceId=demo-relaxation&date=2026-10-05")
+    ).body.slots;
+    assert.equal(slots[0].label, "10:15");
+    assert.equal(slots.at(-1).label, "16:45");
+    assert.ok(!slots.some((s) => s.label === "12:00"));
+    const payload = {
+      serviceId: "demo-relaxation",
+      startsAt: slots[0].startsAt,
+      name: "Demo Guest",
+      email: "demo-guest@example.com",
+    };
+    const key = randomUUID();
+    const booking = await call("/api/bookings", payload, {
+      "Idempotency-Key": key,
+    });
+    assert.equal(booking.status, 201);
+    ids.push(booking.body.booking.id);
+    const auth = { Authorization: "Bearer " + booking.body.accessToken };
+    const replay = await call("/api/bookings", payload, {
+      "Idempotency-Key": key,
+    });
+    assert.equal(replay.body.booking.id, ids[0]);
+    const competing = await call("/api/admin/demo/bookings", {
+      ...payload,
+      channel: "phone",
+      requestId: randomUUID(),
+    });
+    assert.equal(competing.status, 409);
+    const block = await call("/api/admin/demo/blocks", {
+      kind: "travel",
+      startsAt: slots[0].occupiedFrom,
+      endsAt: slots[0].occupiedUntil,
+      reason: "Demo travel",
+    });
+    assert.equal(block.status, 409);
+    const closure = await call("/api/admin/demo/blocks", {
+      kind: "closure",
+      startsAt: slots[0].occupiedFrom,
+      endsAt: slots[0].occupiedUntil,
+      reason: "Demo closure",
+      cancelBookingIds: ids,
+    });
+    assert.equal(closure.status, 201);
+    blocks.push(closure.body.id);
+    assert.equal(
+      (await call("/api/bookings/" + ids[0], null, auth)).body.booking.status,
+      "cancelled",
+    );
+    const owner = await call("/api/admin/demo/bookings", {
+      ...payload,
+      startsAt: slots.at(-1).startsAt,
+      channel: "messaging",
+      requestId: randomUUID(),
+    });
+    assert.equal(owner.status, 201);
+    ids.push(owner.body.id);
+    assert.equal(
+      (
+        await call(
+          "/api/admin/demo/bookings/" + owner.body.id + "/reschedule",
+          { startsAt: slots[0].startsAt },
+        )
+      ).status,
+      409,
+    );
+    const saved = (
+      await pool.query("SELECT starts_at FROM bookings WHERE id=$1", [
+        owner.body.id,
+      ])
+    ).rows[0];
+    assert.equal(
+      new Date(saved.starts_at).toISOString(),
+      slots.at(-1).startsAt,
+    );
+    const moved = slots.find((s) => s.label === "14:15");
+    assert.equal(
+      (
+        await call(
+          "/api/admin/demo/bookings/" + owner.body.id + "/reschedule",
+          { startsAt: moved.startsAt },
+        )
+      ).status,
+      200,
+    );
+    const next = (
+      await call("/api/slots?serviceId=demo-relaxation&date=2026-10-06")
+    ).body.slots[0];
+    const second = await call(
+      "/api/bookings",
+      { ...payload, startsAt: next.startsAt },
+      { "Idempotency-Key": randomUUID() },
+    );
+    assert.equal(second.status, 201);
+    ids.push(second.body.booking.id);
+    clock = DateTime.fromISO(next.startsAt).minus({ minutes: 1439 });
+    const late = await call(
+      "/api/bookings/" + ids.at(-1) + "/cancel",
+      {},
+      { Authorization: "Bearer " + second.body.accessToken },
+    );
+    assert.equal(late.status, 202);
+    assert.equal(late.body.booking.status, "confirmed");
+    clock = DateTime.fromISO(next.startsAt).minus({ minutes: 1440 });
+    assert.equal(
+      (
+        await call(
+          "/api/bookings/" + ids.at(-1) + "/cancel",
+          {},
+          { Authorization: "Bearer " + second.body.accessToken },
+        )
+      ).body.booking.status,
+      "cancelled",
+    );
+    clock = DateTime.fromISO(moved.startsAt).plus({ minutes: 14 });
+    assert.equal(
+      (
+        await call("/api/admin/demo/bookings/" + owner.body.id + "/outcome", {
+          outcome: "no_show",
+          paid: false,
+        })
+      ).status,
+      400,
+    );
+    clock = clock.plus({ minutes: 1 });
+    assert.equal(
+      (
+        await call("/api/admin/demo/bookings/" + owner.body.id + "/outcome", {
+          outcome: "no_show",
+          paid: false,
+        })
+      ).status,
+      200,
+    );
+    assert.equal(
+      (
+        await pool.query("SELECT active FROM calendar_entries WHERE id=$1", [
+          owner.body.id,
+        ])
+      ).rows[0].active,
+      true,
+    );
+    const record = await call("/api/admin/demo/records", {
+      kind: "economics",
+      data: {
+        channel: "web",
+        minutes: 2,
+        manual: false,
+        entryError: false,
+        outcome: "attended",
+        paid: true,
+      },
+    });
+    assert.equal(record.status, 201);
+    assert.match(
+      (await call("/api/admin/demo/economics.csv")).body,
+      /web,2,false,false,attended,true/,
+    );
+    assert.equal((await call("/api/admin/retention")).body.days, 30);
+    await call("/api/admin/logout", {});
+    cookie = null;
+    const support = await call("/api/admin/login", {
+      username: "support",
+      password: "demo-support",
+    });
+    cookie = support.headers.get("set-cookie").split(";")[0];
+    csrf = support.body.csrf;
+    assert.equal(support.body.role, "viewer");
+    assert.equal((await call("/api/admin/operations")).status, 200);
+    assert.equal((await call("/api/admin/bookings")).status, 403);
+    assert.equal(
+      (
+        await call("/api/admin/demo/profile", {
+          confirmation: "USE FICTIONAL DEMO RULES",
+        })
+      ).status,
+      403,
+    );
+    await call("/api/admin/logout", {});
+  } finally {
+    for (const id of ids)
+      await pool.query("DELETE FROM bookings WHERE id=$1", [id]);
+    for (const id of blocks)
+      await pool.query("DELETE FROM calendar_entries WHERE id=$1", [id]);
+    await pool.query("DELETE FROM demo_records");
+    await pool.query(
+      "UPDATE resources SET profile=$1,lead_minutes=$2,buffer_before=$3,buffer_after=$4,lunch_opens=$5,lunch_closes=$6 WHERE id='studio-room'",
+      [
+        resource.profile,
+        resource.lead_minutes,
+        resource.buffer_before,
+        resource.buffer_after,
+        resource.lunch_opens,
+        resource.lunch_closes,
+      ],
+    );
+    await pool.query(
+      "DELETE FROM opening_hours WHERE resource_id='studio-room'",
+    );
+    for (const h of oldHours)
+      await pool.query("INSERT INTO opening_hours VALUES($1,$2,$3,$4)", [
+        h.resource_id,
+        h.weekday,
+        h.opens,
+        h.closes,
+      ]);
+    await pool.query(
+      "UPDATE services SET active=false WHERE id='demo-relaxation'",
+    );
+    for (const s of oldServices)
+      await pool.query("UPDATE services SET active=$1 WHERE id=$2", [
+        s.active,
+        s.id,
+      ]);
+    app.locals.stopRateLimiter();
+    await new Promise((r) => server.close(r));
+    await pool.end();
+  }
+});

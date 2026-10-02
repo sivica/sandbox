@@ -7,6 +7,7 @@ const app = createApp({
   pool,
   tokenSecret: process.env.BOOKING_TOKEN_SECRET,
   adminPasswordHash: process.env.ADMIN_PASSWORD_HASH,
+  supportPasswordHash: process.env.SUPPORT_PASSWORD_HASH,
 });
 const server = app.listen(
   Number(process.env.PORT || 4174),

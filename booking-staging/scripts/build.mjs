@@ -20,3 +20,11 @@ await build({
   format: "esm",
   target: ["es2022"],
 });
+await build({
+  entryPoints: ["src/demo.js"],
+  outfile: "dist/demo.js",
+  bundle: true,
+  minify: true,
+  format: "esm",
+  target: ["es2022"],
+});

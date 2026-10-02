@@ -34,6 +34,7 @@ export function candidates(
   hours,
   duration,
   now = DateTime.utc(),
+  rules = RULES,
 ) {
   if (!validDate(date, timezone, now) || !hours) return [];
   const toMinutes = (time) =>
@@ -41,9 +42,9 @@ export function candidates(
   const close = toMinutes(hours.closes),
     result = [];
   for (
-    let minute = toMinutes(hours.opens);
-    minute + duration <= close;
-    minute += RULES.intervalMinutes
+    let minute = toMinutes(hours.opens) + (rules.bufferBefore || 0);
+    minute + duration + (rules.bufferAfter || 0) <= close;
+    minute += rules.intervalMinutes
   ) {
     const label = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
     const wall = `${date}T${label}`;
@@ -58,10 +59,23 @@ export function candidates(
     if (
       end.toISODate() !== date ||
       end.hour * 60 + end.minute > close ||
-      start < now.plus({ minutes: RULES.leadMinutes })
+      start < now.plus({ minutes: rules.leadMinutes })
     )
       continue;
+    const occupiedStart = start.minus({ minutes: rules.bufferBefore || 0 }),
+      occupiedEnd = end.plus({ minutes: rules.bufferAfter || 0 });
+    if (hours.lunch_opens && hours.lunch_closes) {
+      const lunchStart = DateTime.fromISO(`${date}T${hours.lunch_opens}`, {
+          zone: timezone,
+        }),
+        lunchEnd = DateTime.fromISO(`${date}T${hours.lunch_closes}`, {
+          zone: timezone,
+        });
+      if (occupiedStart < lunchEnd && occupiedEnd > lunchStart) continue;
+    }
     result.push({
+      occupiedFrom: occupiedStart.toUTC().toISO(),
+      occupiedUntil: occupiedEnd.toUTC().toISO(),
       startsAt: start.toUTC().toISO(),
       endsAt: end.toUTC().toISO(),
       label,
@@ -75,8 +89,8 @@ export function excludeBusy(slots, bookings) {
     (slot) =>
       !bookings.some(
         (b) =>
-          new Date(slot.startsAt) < new Date(b.ends_at) &&
-          new Date(slot.endsAt) > new Date(b.starts_at),
+          new Date(slot.occupiedFrom || slot.startsAt) < new Date(b.ends_at) &&
+          new Date(slot.occupiedUntil || slot.endsAt) > new Date(b.starts_at),
       ),
   );
 }

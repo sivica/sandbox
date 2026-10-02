@@ -1,17 +1,43 @@
 import { randomUUID } from "node:crypto";
+import { installDemoOperations } from "./demo-operations.js";
 import { adminAuth } from "./admin-auth.js";
-export function installAdmin(app, { pool, tokenSecret, adminPasswordHash }) {
+export function installAdmin(
+  app,
+  {
+    pool,
+    tokenSecret,
+    adminPasswordHash,
+    supportPasswordHash,
+    now,
+    calendarData,
+  },
+) {
   const auth = adminAuth({
     pool,
     secret: tokenSecret,
     passwordDigest: adminPasswordHash,
+    supportPasswordDigest: supportPasswordHash,
   });
   app.post("/api/admin/login", auth.login);
   app.use("/api/admin", auth.session);
   app.get("/api/admin/session", (req, res) =>
-    res.json({ username: req.admin.actor, csrf: req.admin.csrf }),
+    res.json({
+      username: req.admin.actor,
+      role: req.admin.role,
+      csrf: req.admin.csrf,
+    }),
   );
   app.post("/api/admin/logout", auth.logout);
+  app.use("/api/admin", (req, res, next) => {
+    if (
+      req.admin.role === "viewer" &&
+      !["/operations", "/session", "/logout"].includes(req.path)
+    )
+      return res
+        .status(403)
+        .json({ error: "Support can view synthetic operational logs only." });
+    next();
+  });
   const audit = (client, req, action, target, metadata = {}) =>
     client.query(
       "INSERT INTO admin_audit(id,actor,action,target,metadata) VALUES($1,$2,$3,$4,$5)",
@@ -46,7 +72,7 @@ export function installAdmin(app, { pool, tokenSecret, adminPasswordHash }) {
     )
       return res.status(400).json({ error: "Invalid booking filter." });
     const { rows } = await pool.query(
-      "SELECT b.id,b.reference,b.name,b.email,b.note,b.starts_at,b.ends_at,b.status,b.price_cents,b.currency,s.name service_name FROM bookings b JOIN services s ON s.id=b.service_id WHERE ($1='all' OR b.status=$1) ORDER BY b.starts_at DESC LIMIT 51 OFFSET $2",
+      "SELECT b.id,b.reference,b.name,b.email,b.note,b.starts_at,b.ends_at,b.status,b.outcome,b.paid,b.late_cancel_requested,b.channel,b.contact_route,b.price_cents,b.currency,s.name service_name FROM bookings b JOIN services s ON s.id=b.service_id WHERE ($1='all' OR b.status=$1) ORDER BY b.starts_at DESC LIMIT 51 OFFSET $2",
       [status, offset],
     );
     res.json({
@@ -96,11 +122,9 @@ export function installAdmin(app, { pool, tokenSecret, adminPasswordHash }) {
       price_cents > 1000000 ||
       typeof active !== "boolean"
     )
-      return res
-        .status(400)
-        .json({
-          error: "Use 15–240 minutes, a price in cents, and an active setting.",
-        });
+      return res.status(400).json({
+        error: "Use 15–240 minutes, a price in cents, and an active setting.",
+      });
     const result = await transaction(
       req,
       "service.update",
@@ -131,12 +155,9 @@ export function installAdmin(app, { pool, tokenSecret, adminPasswordHash }) {
           h.closes <= h.opens,
       )
     )
-      return res
-        .status(400)
-        .json({
-          error:
-            "Use unique weekdays 1–7 and closing times after opening times.",
-        });
+      return res.status(400).json({
+        error: "Use unique weekdays 1–7 and closing times after opening times.",
+      });
     await transaction(req, "hours.update", "studio-room", async (c) => {
       await c.query(
         "DELETE FROM opening_hours WHERE resource_id='studio-room'",
@@ -149,15 +170,16 @@ export function installAdmin(app, { pool, tokenSecret, adminPasswordHash }) {
     });
     res.json({ ok: true });
   });
+  installDemoOperations(app, { pool, now, calendarData, transaction });
   const eligible =
-    "ends_at < now()-interval '90 days' AND email ~ '^[^@]+@(example\\.com|example\\.org|example\\.net|[a-z0-9.-]+\\.test)$'";
+    "(CASE WHEN status='cancelled' THEN cancelled_at ELSE ends_at END) < now()-interval '30 days' AND email ~ '^[^@]+@(example\\.com|example\\.org|example\\.net|[a-z0-9.-]+\\.test)$'";
   app.get("/api/admin/retention", async (req, res) => {
     const {
       rows: [r],
     } = await pool.query(
       `SELECT count(*)::int count FROM bookings WHERE ${eligible}`,
     );
-    res.json({ days: 90, eligible: r.count, automatic: false });
+    res.json({ days: 30, eligible: r.count, automatic: false });
   });
   app.post("/api/admin/retention", async (req, res) => {
     if (req.body?.confirmation !== "DELETE OLD SYNTHETIC BOOKINGS")
@@ -167,7 +189,7 @@ export function installAdmin(app, { pool, tokenSecret, adminPasswordHash }) {
     const result = await transaction(
       req,
       "retention.apply",
-      "synthetic-90-days",
+      "synthetic-30-days",
       (c) => c.query(`DELETE FROM bookings WHERE ${eligible}`),
     );
     res.json({ deleted: result.rowCount });

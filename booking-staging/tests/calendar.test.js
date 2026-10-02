@@ -68,3 +68,35 @@ test("adjacent ranges allowed, overlapping durations removed", () => {
     ["09:00"],
   );
 });
+test("fictional studio occupies buffers, excludes lunch and enforces elapsed lead time", () => {
+  const rules = {
+    leadMinutes: 1440,
+    intervalMinutes: 15,
+    bufferBefore: 15,
+    bufferAfter: 15,
+  };
+  const slots = candidates(
+    "2026-10-02",
+    zone,
+    {
+      opens: "10:00",
+      closes: "18:00",
+      lunch_opens: "13:00:00",
+      lunch_closes: "14:00:00",
+    },
+    60,
+    DateTime.fromISO("2026-10-01T00:00:00Z"),
+    rules,
+  );
+  assert.equal(slots[0].label, "10:15");
+  assert.equal(slots.at(-1).label, "16:45");
+  assert.ok(!slots.some((s) => s.label === "17:00"));
+  assert.ok(!slots.some((s) => s.label === "12:00"));
+  assert.equal(
+    DateTime.fromISO(slots[0].occupiedUntil).diff(
+      DateTime.fromISO(slots[0].occupiedFrom),
+      "minutes",
+    ).minutes,
+    90,
+  );
+});

@@ -29,10 +29,29 @@ try {
     "DELETE FROM operational_checks WHERE kind='health' AND created_at < now()-interval '30 days'",
   );
   await pool.query("DELETE FROM admin_sessions WHERE expires_at < now()");
-  if (prior?.status !== status)
+  await pool.query(
+    "DELETE FROM admin_audit WHERE created_at < now()-interval '90 days'",
+  );
+  await pool.query(
+    "DELETE FROM demo_records WHERE kind<>'economics' AND created_at < now()-interval '37 days'",
+  );
+  if (prior?.status !== status) {
+    await pool.query(
+      "INSERT INTO demo_records(id,kind,data) VALUES($1,'alert',$2)",
+      [
+        randomUUID(),
+        {
+          action: status === "ok" ? "recovery" : "failure",
+          recipients: ["owner@example.com", "support@example.com"],
+          delivery: "log_only",
+          status,
+        },
+      ],
+    );
     console.log(
       JSON.stringify({ event: "health_state_changed", status, ...details }),
     );
+  }
   if (status === "failed") process.exitCode = 1;
 } finally {
   await pool.end();

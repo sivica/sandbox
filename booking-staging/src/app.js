@@ -24,6 +24,18 @@ function writeStore(store, key, value) {
     /* In-memory retry remains available when storage is blocked. */
   }
 }
+// Private receipt tokens stay in the fragment, never in HTTP requests or server logs.
+const receipt = new URLSearchParams(location.hash.slice(1));
+if (
+  /^[0-9a-f-]{36}$/i.test(receipt.get("booking") || "") &&
+  /^[0-9a-f]{64}$/.test(receipt.get("token") || "")
+) {
+  writeStore(localStorage, SAVED, {
+    id: receipt.get("booking"),
+    accessToken: receipt.get("token"),
+  });
+  history.replaceState(null, "", location.pathname);
+}
 async function api(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -75,7 +87,12 @@ function App() {
     [bootLoading, setBootLoading] = useState(true),
     [bootError, setBootError] = useState(""),
     [refresh, setRefresh] = useState(0),
-    [form, setForm] = useState({ name: "", email: "", note: "" }),
+    [form, setForm] = useState({
+      name: "",
+      email: "",
+      note: "",
+      contactRoute: "email",
+    }),
     [errors, setErrors] = useState({}),
     [validationAttempt, setValidationAttempt] = useState(0),
     [sending, setSending] = useState(false),
@@ -207,7 +224,7 @@ function App() {
         setSubmitError(error.message);
       } else {
         setSubmitError(
-          "The outcome is not confirmed yet. Retry the same request to check it safely; no second booking will be created.",
+          "Checking reservation. The outcome is not confirmed yet. Retry the same request to check it safely; no second booking will be created.",
         );
       }
     } finally {
@@ -255,6 +272,7 @@ function App() {
         body: "{}",
       });
       setConfirmed(result.booking);
+      if (result.ownerRequest) setCancelError(result.message);
     } catch {
       setCancelError(
         "Cancellation could not be confirmed. Retry to check it safely.",
@@ -273,7 +291,7 @@ function App() {
     setSubmitError("");
     setSlotConflict(false);
     setCancelError("");
-    setForm({ name: "", email: "", note: "" });
+    setForm({ name: "", email: "", note: "", contactRoute: "email" });
   }
   const field = (key, label, type = "text") =>
     h(
@@ -327,7 +345,7 @@ function App() {
         h("strong", null, item.name),
         h("small", null, `${item.minutes} min · Kindred studio`),
       ),
-      h("strong", null, `€${item.price}`),
+      h("strong", null, `${item.currency} ${item.price}`),
     );
   let content;
   if (bootLoading)
@@ -401,7 +419,11 @@ function App() {
                   { className: "service-copy" },
                   h("small", null, s.category),
                   h("strong", null, s.name),
-                  h("span", null, `${s.minutes} min · €${s.price}`),
+                  h(
+                    "span",
+                    null,
+                    `${s.minutes} min · ${s.currency} ${s.price}`,
+                  ),
                 ),
                 h("span", { "aria-hidden": true }, "→"),
               ),
@@ -416,7 +438,7 @@ function App() {
       h(
         "p",
         { className: "footnote" },
-        "Sample prices in EUR. No payment is collected.",
+        "Fictional sample prices. No payment is collected.",
       ),
       saved &&
         button(
@@ -560,6 +582,28 @@ function App() {
         field("email", "Email address", "email"),
         h(
           "label",
+          null,
+          "Preferred contact route",
+          h(
+            "select",
+            {
+              value: form.contactRoute || "email",
+              disabled: sending || !!pending,
+              onChange: (e) =>
+                setForm({ ...form, contactRoute: e.target.value }),
+            },
+            ...["email", "messaging", "phone"].map((v) =>
+              h("option", { key: v, value: v }, v),
+            ),
+          ),
+        ),
+        h(
+          "p",
+          null,
+          "For messaging or phone, use a fictional identifier formatted as an example.com email. No message is sent.",
+        ),
+        h(
+          "label",
           { className: "field" },
           "Anything we should know? (optional)",
           h("textarea", {
@@ -644,6 +688,12 @@ function App() {
         { className: "info" },
         "Saved in the staging database. Reload this browser to retrieve it. No real appointment or email has been created.",
       ),
+      saved &&
+        h(
+          "a",
+          { href: `/#booking=${saved.id}&token=${saved.accessToken}` },
+          "Private test receipt — anyone with this link can access this test booking",
+        ),
       cancelError && h("p", { role: "alert" }, cancelError),
       confirmed.status !== "cancelled" &&
         button(sending ? "Cancelling…" : "Cancel test booking", cancelBooking, {

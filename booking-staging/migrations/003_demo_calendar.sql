@@ -1,0 +1,25 @@
+ALTER TABLE resources ADD COLUMN profile text NOT NULL DEFAULT 'sample';
+ALTER TABLE resources ADD COLUMN lead_minutes integer NOT NULL DEFAULT 30;
+ALTER TABLE resources ADD COLUMN buffer_before integer NOT NULL DEFAULT 0;
+ALTER TABLE resources ADD COLUMN buffer_after integer NOT NULL DEFAULT 0;
+ALTER TABLE resources ADD COLUMN lunch_opens time;
+ALTER TABLE resources ADD COLUMN lunch_closes time;
+ALTER TABLE bookings ADD COLUMN occupied_from timestamptz;
+ALTER TABLE bookings ADD COLUMN occupied_until timestamptz;
+UPDATE bookings SET occupied_from=starts_at,occupied_until=ends_at;
+ALTER TABLE bookings ALTER COLUMN occupied_from SET NOT NULL;
+ALTER TABLE bookings ALTER COLUMN occupied_until SET NOT NULL;
+ALTER TABLE bookings ADD COLUMN channel text NOT NULL DEFAULT 'web';
+ALTER TABLE bookings ADD COLUMN contact_route text NOT NULL DEFAULT 'email';
+ALTER TABLE bookings ADD COLUMN outcome text NOT NULL DEFAULT 'pending';
+ALTER TABLE bookings ADD COLUMN paid boolean NOT NULL DEFAULT false;
+ALTER TABLE bookings ADD COLUMN late_cancel_requested boolean NOT NULL DEFAULT false;
+ALTER TABLE admin_sessions ADD COLUMN role text NOT NULL DEFAULT 'owner';
+CREATE TABLE calendar_entries(id uuid PRIMARY KEY,resource_id text NOT NULL REFERENCES resources(id),starts_at timestamptz NOT NULL,ends_at timestamptz NOT NULL CHECK(ends_at>starts_at),active boolean NOT NULL DEFAULT true,kind text NOT NULL CHECK(kind IN ('booking','closure','travel','other')),reason text NOT NULL DEFAULT '',CONSTRAINT calendar_entries_no_overlap EXCLUDE USING gist(resource_id WITH =,tstzrange(starts_at,ends_at,'[)') WITH &&) WHERE(active));
+INSERT INTO calendar_entries(id,resource_id,starts_at,ends_at,active,kind) SELECT id,resource_id,occupied_from,occupied_until,status='confirmed','booking' FROM bookings;
+CREATE FUNCTION sync_booking_calendar() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+IF TG_OP='DELETE' THEN DELETE FROM calendar_entries WHERE id=OLD.id;RETURN OLD;END IF;
+INSERT INTO calendar_entries(id,resource_id,starts_at,ends_at,active,kind) VALUES(NEW.id,NEW.resource_id,NEW.occupied_from,NEW.occupied_until,NEW.status='confirmed','booking') ON CONFLICT(id) DO UPDATE SET starts_at=EXCLUDED.starts_at,ends_at=EXCLUDED.ends_at,active=EXCLUDED.active;
+RETURN NEW;END $$;
+CREATE TRIGGER booking_calendar_sync AFTER INSERT OR UPDATE OR DELETE ON bookings FOR EACH ROW EXECUTE FUNCTION sync_booking_calendar();
+CREATE TABLE demo_records(id uuid PRIMARY KEY,kind text NOT NULL CHECK(kind IN ('inquiry','contact','reconciliation','economics','alert','retention')),booking_id uuid REFERENCES bookings(id) ON DELETE SET NULL,data jsonb NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT now());

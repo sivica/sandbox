@@ -39,6 +39,7 @@ export function adminAuth({
   pool,
   secret,
   passwordDigest,
+  supportPasswordDigest,
   username = "owner",
   clock = () => Date.now(),
 }) {
@@ -59,14 +60,19 @@ export function adminAuth({
     const {
       rows: [record],
     } = await pool.query(
-      "SELECT actor FROM admin_sessions WHERE token_hash=$1 AND expires_at > now()",
+      "SELECT actor,role FROM admin_sessions WHERE token_hash=$1 AND expires_at > now()",
       [hash(token)],
     );
     if (!record)
       return res
         .status(401)
         .json({ error: "Your session expired. Sign in again." });
-    req.admin = { actor: record.actor, token, csrf: tokenCsrf(token) };
+    req.admin = {
+      actor: record.actor,
+      role: record.role,
+      token,
+      csrf: tokenCsrf(token),
+    };
     if (!["GET", "HEAD"].includes(req.method)) {
       const provided = req.get("x-csrf-token") || "";
       if (
@@ -93,8 +99,13 @@ export function adminAuth({
         .status(429)
         .json({ error: "Too many sign-in attempts. Wait 15 minutes." });
     }
-    const validUser = req.body?.username === username;
-    const valid = await verifyPassword(req.body?.password, passwordDigest);
+    const support = req.body?.username === "support";
+    const validUser =
+      req.body?.username === username || (support && !!supportPasswordDigest);
+    const valid = await verifyPassword(
+      req.body?.password,
+      support ? supportPasswordDigest : passwordDigest,
+    );
     if (!validUser || !valid) {
       const state =
         prior && prior.until > time
@@ -111,11 +122,19 @@ export function adminAuth({
     attempts.delete(ip);
     const token = randomBytes(32).toString("hex");
     await pool.query(
-      "INSERT INTO admin_sessions(token_hash,actor,expires_at) VALUES($1,$2,now()+interval '8 hours')",
-      [hash(token), username],
+      "INSERT INTO admin_sessions(token_hash,actor,expires_at,role) VALUES($1,$2,now()+interval '8 hours',$3)",
+      [
+        hash(token),
+        support ? "support" : username,
+        support ? "viewer" : "owner",
+      ],
     );
     res.cookie("kindred_admin", token, cookieOptions(req));
-    res.json({ username, csrf: tokenCsrf(token) });
+    res.json({
+      username: support ? "support" : username,
+      role: support ? "viewer" : "owner",
+      csrf: tokenCsrf(token),
+    });
   }
   async function logout(req, res) {
     await pool.query("DELETE FROM admin_sessions WHERE token_hash=$1", [
