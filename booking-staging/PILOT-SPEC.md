@@ -35,40 +35,94 @@ These facts identify a candidate workflow, not an integration contract. The real
 
 The running Kindred staging app still uses its existing sample services, EUR prices and sample hours. This proposal does not change deployed settings or represent the candidate business publicly.
 
+## Calendar responsibility and daily operations
+
+Name the authoritative calendar, each practitioner/room and the person responsible for keeping every booking channel current. Appointments taken through messaging, phone or another system must block the resources they use. Other services, home visits and associated travel also block shared resources even though home visits are outside this pilot’s customer booking scope.
+
+Agree when manual appointments are entered, how updates synchronize, and who resolves mismatches. If availability cannot be verified, use the agreed fallback rather than presenting an unverified time as confirmed. Integration feasibility must establish how conflicts across channels are prevented or detected; the existing staging database alone cannot prevent external-calendar conflicts.
+
+Choose instant confirmation or owner approval. Define minimum contact details, confirmation/cancellation delivery, the owner’s checking or notification duty, response time for pending requests and an outage fallback. Show “confirmed” only after the authoritative reservation is recorded. Automatic notifications may remain outside scope if the owner approves a workable manual process.
+
+Define the full occupied window as preparation + treatment + cleanup, with each buffer counted once. Record how travel affects that window. Cancellation cutoffs must be expressed relative to the appointment’s Europe/Skopje start. Name who contacts customers affected by owner cancellations/closures, offers rescheduling or refunds, records the result and releases the slot. Define fee collection/refunds or explicitly agree that the pilot has no cancellation fee.
+
 ## Customer and owner flow
 
 1. Customer selects the approved service and a date.
 2. Calendar availability is checked against hours, closures, buffers and existing appointments.
 3. Customer selects a time and supplies only the agreed booking details.
 4. On submission, availability is checked again. A retry must not create a duplicate.
-5. Customer receives the agreed confirmation or a clear request to choose another slot.
+5. After the authoritative reservation is recorded, customer receives the agreed confirmation. Owner-approval requests remain clearly pending until approved; failed reservations offer the agreed fallback or another slot.
 6. Owner can inspect or cancel the booking; customer cancellation follows the approved policy.
 
 For demonstrations, use invented names and example.com or .test emails. No clinical history or symptom collection is proposed. Real customer intake requirements need separate definition.
 
 ## Five scenarios for owner approval
 
+For each row, record **Accepted / Change required / Not applicable**, the expected result and any correction. Assess 5a and 5b separately.
+
 | Scenario | Proposed behaviour | Owner decision |
 | --- | --- | --- |
-| Last appointment of the day | Show a slot only if treatment and required buffer finish within working hours | Confirm closing time and buffers |
-| Two customers select the same time | First valid booking wins; second retains details and chooses another slot | Confirm capacity and authoritative calendar |
-| Owner blocks a holiday or break | A blocked period cannot be booked; existing appointments need an explicit handling decision | Confirm who manages closures and exceptions |
-| Customer cancels close to appointment | Apply the approved deadline/fee; show the rule before submission | Define cutoff, refund/fee and rescheduling policy |
-| Home visit or interrupted submission | Home visit goes outside studio-only scope; repeated submission creates at most one booking | Confirm delivery scope and retry behaviour |
+| 1. Last appointment of the day | Show a slot only when the full occupied window fits working hours | Give one worked example: preparation, 60-minute treatment, cleanup, closing time and last valid start; count buffers once |
+| 2. Two customers select the same time | At most one reservation for the same resource; unsuccessful customer retains details | Confirm capacity; include contention with an appointment entered through another channel |
+| 3. Owner blocks a holiday or break | Block new bookings; explicitly handle existing appointments | Name who creates blocks, contacts customers, and keeps, reschedules or cancels existing appointments |
+| 4. Customer cancels close to appointment | Show the agreed policy before submission and apply it at the exact cutoff boundary | Define cutoff, fee/refund collection, rescheduling, slot release and owner-cancellation handling |
+| 5a. Home visit | Route inquiry to the agreed channel; block shared practitioner resources and travel | Confirm studio-only pilot scope, routing and travel rules |
+| 5b. Interrupted submission | Lost reply/reload recovers the result or safely retries, with at most one reservation and clear status | Confirm retry behaviour in the authoritative calendar and pending/confirmed wording |
+
+## Pilot economics and decision to continue
+
+The advertised treatment price is separate from the booking product’s fee. Willingness to pay and financial benefit remain unknown.
+
+Agree a baseline and bounded pilot before offering a paid live trial. Measure completed appointments (define whether this means attended and/or paid), coordination minutes, owner interventions and conflicts/errors. Name who records each measure and compare against a comparable baseline period or inquiry sample. Avoid attributing all changes to the product if demand, staffing or prices change.
+
+| Pilot term | Owner-agreed value |
+| --- | --- |
+| Baseline period/sample and workload | __________ |
+| Pilot duration or booking-volume limit | __________ |
+| Completed-appointment definition | __________ |
+| Measurement owner and recording method | __________ |
+| Coordination time, interventions and errors at baseline | __________ |
+| Pilot fee, currency and payment terms | __________ |
+| Included setup, support hours and response time | __________ |
+| Ongoing price and external calendar/notification costs | __________ |
+| Success thresholds | __________ |
+| Stop criteria and fallback to existing process | __________ |
+| Review date and person deciding stop/continue | __________ |
+
+Estimate value using owner-supplied inputs: time saved × agreed value of owner time, plus contribution from genuinely incremental completed appointments, minus product and operating costs. Do not treat treatment revenue as profit or count the same benefit twice. A positive estimate is a hypothesis until the pilot measures it.
 
 ## Owner response sheet
 
-- Calendar/provider and owner: __________
+- Calendar/provider, account permissions and responsible owner: __________
+- Every booking channel, update timing/sync and mismatch responsibility: __________
+- Practitioner/room capacity, other-service blocks and home-visit/travel rules: __________
 - Studio-only scope accepted: yes / no; changes: __________
-- Service, duration and current MKD price: __________
-- Weekly hours, closures and buffers: __________
-- Lead time, horizon and capacity: __________
-- Cancellation, no-show and rescheduling rules: __________
-- Confirmation, notifications and payments: __________
+- Service, duration and current MKD price (including applicable taxes): __________
+- Weekly hours, closures, preparation and cleanup buffers: __________
+- Lead time, horizon and slot interval: __________
+- Cancellation cutoff, no-show/rescheduling, fees/refunds and collection method: __________
+- Owner cancellation/closure procedure and responsible person: __________
+- Instant confirmation or approval, minimum contact method and pending response time: __________
+- Customer delivery, owner checking/notification duties and outage fallback: __________
 - Data retention, admin roles and alert recipient: __________
-- Scenarios approved: 1 / 2 / 3 / 4 / 5; required corrections: __________
-- Owner name, approval date and agreed scope: __________
+- Pilot economics table completed: yes / no; outstanding items: __________
 
-## Next milestone
+| Scenario | Accepted / Change required / Not applicable | Expected result and correction |
+| --- | --- | --- |
+| 1 | __________ | __________ |
+| 2 | __________ | __________ |
+| 3 | __________ | __________ |
+| 4 | __________ | __________ |
+| 5a | __________ | __________ |
+| 5b | __________ | __________ |
 
-Obtain the owner's completed response and explicit approval. Then assess calendar integration feasibility, agree a measurable pilot and implement only the accepted rules. The receiving developer's acceptance remains separate. No owner outreach or approval has occurred.
+## Approval stages and next milestone
+
+1. **Requirements review:** owner completes the response sheet and scenario results. This approves the requirements draft only.
+2. **Feasibility and cost:** receiving developer assesses calendar/resource integration and fallback; owner reviews setup, support and operating costs.
+3. **Pilot terms:** agree scope, duration/volume, measures, fee, support, success/stop criteria and review date.
+4. **Live-pilot acceptance:** record explicit owner approval of that specific scope and operational readiness. Receiving-developer acceptance remains separate.
+
+For each stage record owner/reviewer name, date, approved document revision, scope, accepted limitations and unresolved items: __________
+
+Next: obtain the real owner’s requirements response. No owner outreach, participation, willingness to pay or actual approval has been established. The simulated owner review improved this proposal and does not complete any approval stage.
