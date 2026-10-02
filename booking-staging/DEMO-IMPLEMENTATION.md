@@ -22,4 +22,4 @@ Missing or different: profile/service/currency, occupied buffers/lunch, staff/tr
 
 ## Dependencies automation cannot approve
 
-Real calendar/provider and owner decisions; real commercial agreement and willingness to pay; MFA/provider selection for production; actual human acceptance; snapshot permissions; actual outgoing alert destination. Keep these pending. The simulated email recipients are illustrative and must not be contacted.
+Real calendar/provider and owner decisions; real commercial agreement and willingness to pay; MFA/provider selection for production; actual human acceptance; actual outgoing alert destination. Keep these pending. The simulated email recipients are illustrative and must not be contacted. Scheduled backups are deferred to production and are not a demo completion gate. Configure and verify backups before real customer data.

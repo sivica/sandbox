@@ -20,7 +20,7 @@ Current sample defaults: Europe/Skopje, one room, Monday–Saturday 09:00–18:0
 2. Set up disposable PostgreSQL and dummy secrets; build and run the documented checks.
 3. Walk through booking, conflict recovery, lost-response retry, reload and cancellation.
 4. Review owner session/CSRF controls, service edits, opening hours and retention confirmation.
-5. Review Railway health worker, recovery drill evidence and the remaining snapshot permission gap.
+5. Review Railway health worker, recovery drill evidence and the production-only backup requirement.
 6. Record blocking findings with file/line, reproduction and required correction.
 7. Record explicit acceptance, name, date and any accepted limitations.
 
@@ -38,7 +38,7 @@ No human acceptance is recorded yet. Automated or role-play reviews do not repla
 
 Cloud: Railway checks staging every five minutes even when the Mac sleeps.
 Chat follow-up: active hourly automation “Kindred staging follow-up”; checks health, CI and actionable staging work, and reports only meaningful changes. Depends on the Mac and Codex being available.
-Snapshots: dashboard confirms backup creation requires Pro, while the current workspace is Hobby; no volume backups exist. CLI also refused scheduling/creation. The account owner must decide whether to upgrade or approve another backup approach; reauthorization alone is insufficient. No SSH credentials are required or registered for this flow.
+Snapshots: dashboard confirms backup creation requires Pro, while the current workspace is Hobby; no volume backups exist. CLI also refused scheduling/creation. Scheduled backups are deferred to production and nonblocking for the synthetic demo. No upgrade is needed to finish the demo; configure and verify backups before real customer data. No SSH credentials are required or registered for this flow.
 
 Do not launch for real customers until production decisions and acceptance are recorded. Keep real customer data out of staging.
 

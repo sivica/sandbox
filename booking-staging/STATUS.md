@@ -24,7 +24,7 @@ Verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only e
 ## Remaining for real customer use
 - Actual buyer's provider/calendar and business rules.
 - Confirm production admin roles/MFA, retention policy, backup coverage and alert destination; staging controls are implemented.
-- Railway dashboard confirms backup creation requires Pro; current workspace is Hobby and has no volume backups. CLI also returned OAUTH_INSUFFICIENT_GRANT. Reauthorization alone is insufficient.
+- Scheduled backups are deferred to production and nonblocking for this synthetic demo. The demo can be rebuilt and reseeded; configure and verify backups before real customer data.
 - Any agreed notifications/payment integrations.
 - Independent human developer and buyer acceptance.
 
