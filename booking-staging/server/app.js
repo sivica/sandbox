@@ -416,14 +416,12 @@ export function createApp({
         "UPDATE bookings SET late_cancel_requested=true WHERE id=$1",
         [row.id],
       );
-      return res
-        .status(202)
-        .json({
-          booking: responseFor(row),
-          ownerRequest: true,
-          message:
-            "Late cancellation requested. Your appointment remains reserved until the owner records cancellation.",
-        });
+      return res.status(202).json({
+        booking: responseFor(row),
+        ownerRequest: true,
+        message:
+          "Late cancellation requested. Your appointment remains reserved until the owner records cancellation.",
+      });
     }
     await pool.query(
       "UPDATE bookings SET status='cancelled',cancelled_at=COALESCE(cancelled_at,now()) WHERE id=$1",
@@ -446,7 +444,12 @@ export function createApp({
   app.use((req, res) => res.status(404).json({ error: "Not found." }));
   app.use((error, req, res, next) => {
     const status =
-      error.status || (error.type === "entity.parse.failed" ? 400 : 500);
+      error.status ||
+      (error.code === "23P01"
+        ? 409
+        : error.type === "entity.parse.failed"
+          ? 400
+          : 500);
     // Do not log request bodies, database URLs, tokens or raw database errors.
     if (status >= 500)
       console.error("Request failed", {
@@ -457,7 +460,9 @@ export function createApp({
       error:
         status >= 500
           ? "The booking service is temporarily unavailable. Please retry."
-          : error.message,
+          : error.code === "23P01"
+            ? "That occupied window overlaps an existing reservation or block."
+            : error.message,
       code: status >= 500 ? "unavailable" : error.code || "invalid_request",
     });
   });
