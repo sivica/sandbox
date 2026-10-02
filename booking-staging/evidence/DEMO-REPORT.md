@@ -25,7 +25,8 @@ Synthetic API and mobile Chromium walkthrough passed:
 6. Owner operations renders at Pixel 7 width with no horizontal document overflow.
 7. Support login redirects to operational logs; booking reads and profile mutations are denied with 403.
 8. All five customer screens work with the new fictional service and phone contact preference; reload and self-cancellation succeed.
-9. Latest recorded cloud health execution was OK at 16:20:42 UTC. The updated scheduled worker recorded HTTP 200 / OK at 16:25:32 UTC.
+9. Exact fictional home-visit scenario 5a: an 11:00 treatment blocks 10:15–12:45 Europe/Skopje; overlapping studio starts were unavailable, and the test block was released. See home-scenario.json.
+10. Latest recorded cloud health execution was OK at 16:20:42 UTC. The updated scheduled worker recorded HTTP 200 / OK at 16:25:32 UTC.
 
 Test reservations were cancelled through owner administration in cleanup. Test log entries remain as synthetic verification evidence, not actual pilot measurements. Browser sessions were signed out and closed. No real message or payment was sent, and no database was exposed.
 

@@ -2,7 +2,7 @@
 
 Separate from the reviewed `booking-design-pilot/` prototype. This version adds a bundled React frontend, Node API, PostgreSQL persistence and server-authoritative sample availability. It is a staging implementation for a fictional business, not an accepted production booking service.
 
-## Sample business rules
+## Initial seed rules (before fictional profile activation)
 
 - One treatment room, `studio-room`, in `Europe/Skopje` time.
 - Monday–Saturday 09:00–18:00; Sundays closed. No holidays or staff calendars configured.
@@ -10,7 +10,7 @@ Separate from the reviewed `booking-design-pilot/` prototype. This version adds 
 - Starts every 15 minutes; at least 30 minutes' notice; booking window today through 30 local calendar days ahead.
 - Slots must finish before closing. UTC instants are stored; the business timezone is used for display and availability. Ambiguous/nonexistent DST start times are excluded.
 - Only invented customer details and `example.com`, `example.org`, `example.net` or `.test` emails are accepted. No email, payment or real appointment is created.
-- Test bookings can be cancelled immediately using the browser's private booking token. A real cancellation policy is not implemented.
+- Initial sample bookings can be cancelled immediately using the private token. The activated fictional profile applies the simulated 24-hour policy described below; actual business policy remains unapproved.
 
 Draft staging PR: https://github.com/sivica/sandbox/pull/2
 
@@ -43,7 +43,7 @@ Open http://127.0.0.1:4174. `.env` is ignored and must never be committed. Serve
 | GET /api/bookings/:id | Retrieve a saved booking; `Authorization: Bearer TOKEN` required |
 | POST /api/bookings/:id/cancel | Cancel/release capacity; same bearer token required |
 
-Creation body: `{ serviceId, startsAt, name, email, note }`. `startsAt` must be an explicit UTC ISO instant ending in Z. Price, duration and availability come from the server, not customer input. Returns `{ booking, accessToken }`; a replay also returns `replayed: true`. Store the token privately, never in a URL or public report. No public booking-list endpoint exists; lookup responses omit email and note.
+Creation body: `{ serviceId, startsAt, name, email, note }`. `startsAt` must be an explicit UTC ISO instant ending in Z. Price, duration and availability come from the server, not customer input. Returns `{ booking, accessToken }`; a replay also returns `replayed: true`. Store the token privately. Receipt links use a browser-only URL fragment that is removed after local import; never share these bearer links or include them in public reports. No public booking-list endpoint exists; lookup responses omit email and note.
 
 ### Conflicts and retries
 
@@ -60,7 +60,7 @@ npx playwright install chromium webkit
 npm test
 ```
 
-Unit tests cover real dates, horizons, lead time, durations, overlap and DST boundaries. API tests use real PostgreSQL to cover simultaneous requests, durable retrieval through a new server instance, direct constraint enforcement, request replay, validation, token authorization, cancellation and rate limiting. They remove only records they created. Browser checks cover mobile Chromium/WebKit and landscape, confirmation reload, response lost after database commit, conflict recovery, empty/unavailable/error states, axe scans and 200% text. Browser-created bookings are cancelled after each test.
+Unit tests cover real dates, horizons, lead time, durations, overlap and DST boundaries. API tests use real PostgreSQL to cover simultaneous requests, durable retrieval through a new server instance, direct constraint enforcement, request replay, validation, token authorization, cancellation and rate limiting. They restore seed configuration and remove test records in a disposable database; the combined fictional scenario also clears operational records. Never use a shared/staging database for this suite. Browser checks cover mobile Chromium/WebKit and landscape, confirmation reload, response lost after database commit, conflict recovery, empty/unavailable/error states, axe scans and 200% text. Browser-created bookings are cancelled after each test.
 
 `.github/workflows/booking-staging.yml` uses a disposable PostgreSQL service and uploads evidence. Historical prototype test results do not establish staging results; current results are recorded in STATUS.md.
 
