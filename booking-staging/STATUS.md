@@ -18,13 +18,22 @@ Verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only e
 - Owner approved public staging access. Preview: https://kindred-booking-staging-staging.up.railway.app/
 - 12/12 deployed browser checks passed in approximately 1.3 minutes, with no retries. HTML/JS/CSS match the built source; /health returned HTTP 200.
 - Browser-created test bookings were cancelled, releasing their slots. The database remains private.
-- The API implements /health and CI uses it for readiness; Railway's platform healthcheck path remains unconfigured. Configure/verify that before real customer launch alongside monitoring.
+- Railway startup health checks now use /health (60-second timeout). A separate five-minute cron worker records ongoing health checks.
 
 
 ## Remaining for real customer use
 - Actual buyer's provider/calendar and business rules.
-- Authenticated administration, retention/deletion, backup/restore verification and monitoring.
+- Confirm production admin roles/MFA, retention policy, backup coverage and alert destination; staging controls are implemented.
+- Railway scheduled volume snapshots need account permission (OAUTH_INSUFFICIENT_GRANT).
 - Any agreed notifications/payment integrations.
 - Independent human developer and buyer acceptance.
 
 Temporary Railway SSH key registration was rejected by automatic approval review. No key was registered. Database verification uses disposable PostgreSQL in CI instead.
+
+## Staging operations addition
+- Owner administration deployed: bookings/cancellation, service settings, opening hours, manual 90-day synthetic retention, audit log.
+- Mobile admin sign-in/save/CSRF refusal/sign-out passed; first cloud health check recorded OK.
+- 5 calendar checks, PostgreSQL API checks including administration, and 12 browser executions passed in CI; all 12 live booking checks passed.
+- CI: https://github.com/sivica/sandbox/actions/runs/36992404429 and https://github.com/sivica/sandbox/actions/runs/36992408605
+- PITR archive enabled and separate-database restore verified: 12 immutable booking rows matched, three services present, overlap constraint preserved. Temporary recovery services removed after verification.
+- No outgoing alerts configured. Admin password is local outside the repository; do not distribute it.

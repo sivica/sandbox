@@ -70,7 +70,7 @@ export function adminAuth({
     if (!["GET", "HEAD"].includes(req.method)) {
       const provided = req.get("x-csrf-token") || "";
       if (
-        provided.length !== req.admin.csrf.length ||
+        !/^[0-9a-f]{64}$/.test(provided) ||
         !timingSafeEqual(Buffer.from(provided), Buffer.from(req.admin.csrf))
       )
         return res
