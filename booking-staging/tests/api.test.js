@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { DateTime } from "luxon";
 import { createPool, migrate } from "../server/db.js";
 import { createApp } from "../server/app.js";
+import { passwordHash } from "../server/admin-auth.js";
 
 test("real PostgreSQL booking API: persistence, concurrency, retries, protection and cleanup", async (t) => {
   const pool = createPool();
@@ -11,6 +12,7 @@ test("real PostgreSQL booking API: persistence, concurrency, retries, protection
   const app = createApp({
     pool,
     tokenSecret: process.env.BOOKING_TOKEN_SECRET,
+    adminPasswordHash: await passwordHash("ci-only-admin-password"),
     rateLimit: 10000,
   });
   const server = app.listen(0, "127.0.0.1");
@@ -217,6 +219,95 @@ test("real PostgreSQL booking API: persistence, concurrency, retries, protection
         const replay = await post(payload, key);
         assert.equal(replay.status, 200);
         assert.equal(replay.body.booking.status, "cancelled");
+      },
+    );
+    await t.test(
+      "administration requires a session and CSRF, validates edits and logs actions",
+      async () => {
+        assert.equal((await call("/api/admin/bookings")).status, 401);
+        const login = await call("/api/admin/login", {
+          method: "POST",
+          body: JSON.stringify({
+            username: "owner",
+            password: "ci-only-admin-password",
+          }),
+        });
+        assert.equal(login.status, 200);
+        const cookie = login.headers.get("set-cookie").split(";")[0];
+        const headers = { Cookie: cookie, "X-CSRF-Token": login.body.csrf };
+        assert.match(login.headers.get("set-cookie"), /HttpOnly/i);
+        assert.match(login.headers.get("set-cookie"), /SameSite=Strict/i);
+        assert.equal(
+          (await call("/api/admin/bookings", { headers })).status,
+          200,
+        );
+        assert.equal(
+          (
+            await call("/api/admin/hours", {
+              method: "POST",
+              headers: { Cookie: cookie },
+              body: "{}",
+            })
+          ).status,
+          403,
+        );
+        assert.equal(
+          (
+            await call("/api/admin/hours", {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                hours: [{ weekday: 1, opens: "18:00", closes: "09:00" }],
+              }),
+            })
+          ).status,
+          400,
+        );
+        assert.equal(
+          (
+            await call("/api/admin/retention", {
+              method: "POST",
+              headers,
+              body: "{}",
+            })
+          ).status,
+          400,
+        );
+        const settings = await call("/api/admin/settings", { headers });
+        const service = settings.body.services[0];
+        assert.equal(
+          (
+            await call("/api/admin/services/" + service.id, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(service),
+            })
+          ).status,
+          200,
+        );
+        const ops = await call("/api/admin/operations", { headers });
+        assert.ok(ops.body.audit.some((a) => a.action === "service.update"));
+        assert.equal(
+          (
+            await call("/api/admin/logout", {
+              method: "POST",
+              headers,
+              body: "{}",
+            })
+          ).status,
+          200,
+        );
+        assert.equal(
+          (await call("/api/admin/session", { headers })).status,
+          401,
+        );
+        for (let i = 0; i < 6; i++) {
+          const r = await call("/api/admin/login", {
+            method: "POST",
+            body: JSON.stringify({ username: "owner", password: "wrong" }),
+          });
+          assert.equal(r.status, i === 5 ? 429 : 401);
+        }
       },
     );
     await t.test("rate limiter rejects repeated requests", async () => {

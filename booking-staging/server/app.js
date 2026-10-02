@@ -1,4 +1,5 @@
 import express from "express";
+import { installAdmin } from "./admin.js";
 import {
   createHash,
   createHmac,
@@ -83,6 +84,7 @@ async function calendarData(client, serviceId, date, now) {
 export function createApp({
   pool,
   tokenSecret,
+  adminPasswordHash,
   now = () => DateTime.utc(),
   rateLimit = 180,
 } = {}) {
@@ -117,15 +119,16 @@ export function createApp({
       counts.set(key, { count: 1, until: time + 60000 });
     else if (++state.count > rateLimit) {
       res.set("Retry-After", "60");
-      return res
-        .status(429)
-        .json({
-          error: "Too many requests. Please wait a minute.",
-          code: "rate_limit",
-        });
+      return res.status(429).json({
+        error: "Too many requests. Please wait a minute.",
+        code: "rate_limit",
+      });
     }
     // Staging is same-origin. Browser writes from another site are refused.
-    if (req.method === "POST" && req.get("origin")) {
+    if (
+      ["POST", "PUT", "PATCH", "DELETE"].includes(req.method) &&
+      req.get("origin")
+    ) {
       let origin;
       try {
         origin = new URL(req.get("origin"));
@@ -140,6 +143,7 @@ export function createApp({
     next();
   });
   app.use(express.json({ limit: "8kb", strict: true }));
+  installAdmin(app, { pool, tokenSecret, adminPasswordHash });
   app.get("/health", async (req, res) => {
     try {
       await pool.query("SELECT 1");
@@ -203,6 +207,7 @@ export function createApp({
       ...row,
       id: row.service_id,
       name: row.service_name,
+      minutes: (new Date(row.ends_at) - new Date(row.starts_at)) / 60000,
     }),
     timezone: row.timezone,
   });
@@ -390,15 +395,13 @@ export function createApp({
         path: req.path,
         code: error.code || "internal",
       });
-    res
-      .status(status)
-      .json({
-        error:
-          status >= 500
-            ? "The booking service is temporarily unavailable. Please retry."
-            : error.message,
-        code: status >= 500 ? "unavailable" : error.code || "invalid_request",
-      });
+    res.status(status).json({
+      error:
+        status >= 500
+          ? "The booking service is temporarily unavailable. Please retry."
+          : error.message,
+      code: status >= 500 ? "unavailable" : error.code || "invalid_request",
+    });
   });
   return app;
 }

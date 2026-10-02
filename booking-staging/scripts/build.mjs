@@ -12,3 +12,11 @@ await build({
   target: ["es2022"],
   define: { "process.env.NODE_ENV": '"production"' },
 });
+await build({
+  entryPoints: ["src/admin.js"],
+  outfile: "dist/admin.js",
+  bundle: true,
+  minify: true,
+  format: "esm",
+  target: ["es2022"],
+});

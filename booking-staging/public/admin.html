@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Kindred staging administration</title>
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Staging administration</h1>
+      <p>
+        Invented customer details only. Changes affect this sample calendar.
+      </p>
+      <p id="message" role="status" aria-live="polite"></p>
+      <section id="login">
+        <form id="signin">
+          <label
+            >Username<input
+              name="username"
+              autocomplete="username"
+              value="owner"
+              required /></label
+          ><label
+            >Password<input
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required /></label
+          ><button>Sign in</button>
+        </form>
+      </section>
+      <section id="panel" hidden>
+        <button id="logout">Sign out</button>
+        <h2>Bookings</h2>
+        <label
+          >Status<select id="status">
+            <option value="all">All</option>
+            <option>confirmed</option>
+            <option>cancelled</option>
+          </select></label
+        >
+        <div id="bookings"></div>
+        <button id="previous">Previous page</button
+        ><button id="next">Next page</button>
+        <h2>Services</h2>
+        <p>Changes apply to future bookings.</p>
+        <div id="services"></div>
+        <h2>Opening hours</h2>
+        <p>
+          Europe/Skopje. Existing bookings remain valid. Uncheck a day to close
+          it.
+        </p>
+        <form id="hours">
+          <div id="days"></div>
+          <button>Save hours</button>
+        </form>
+        <h2>Retention</h2>
+        <p id="retention"></p>
+        <button id="purge">Review deletion</button>
+        <h2>Operations</h2>
+        <p>
+          Health checks run independently in Railway. Recovery archive status
+          must be checked in the Railway dashboard.
+        </p>
+        <div id="operations"></div>
+      </section>
+    </main>
+    <script type="module" src="/admin.js"></script>
+  </body>
+</html>

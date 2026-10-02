@@ -86,3 +86,15 @@ Confirm the actual provider/calendar, timezone, services, staff/resources, holid
 The bearer token grants access/cancellation to one test booking; losing it means the owner needs database administration to retrieve it. API rate limiting is in-memory per instance, not a distributed abuse control. Database credentials remain server-side; browser writes are same-origin, bodies/fields bounded, queries parameterized, API responses not cached, security headers applied. These controls do not make this fictional staging system production-ready.
 
 Physical iPhone/VoiceOver remains outside the pilot scope; full TalkBack listening/gesture assessment stays deferred. Browser emulation and axe scans do not establish complete accessibility conformance. Human developer and buyer acceptance remain pending.
+
+## Staging administration and operations
+
+Open `/admin.html` for the owner login. The deployment receives only `ADMIN_PASSWORD_HASH` (scrypt), never the plaintext password. Local credentials are stored outside the repository in `/Users/ivica/Work/kindred-staging-private/admin-credentials.txt`, permissions 0600. Do not share that file with the public handoff.
+
+Administration supports paginated bookings, cancellation, service duration/price/availability, weekly opening hours, and an audit trail. An 8-hour HttpOnly/SameSite Strict cookie protects sessions; writes also require a session-bound CSRF token. Login failures are throttled per IP. This is a single-owner staging account, without MFA or multiple roles. Changing service settings preserves existing booking duration and price. Opening-hour changes do not cancel existing appointments.
+
+Retention is manual: preview then explicitly confirm deletion of synthetic bookings whose appointment ended more than 90 days ago. Future appointments remain. Automatic deletion is off. Business retention rules still need buyer agreement; this sample policy is not a production policy.
+
+Railway startup health checks use `/health` with a 60-second timeout. A separate `kindred-staging-monitor` cron service runs `node server/monitor.js` every five minutes, using private PostgreSQL and the public health endpoint. It writes checks to the admin operations view, keeps 30 days, and logs state changes without customer details. There is no outgoing notification integration. A failed cron execution is visible in Railway. Monitoring cannot record a failure while its database is unavailable, so inspect Railway execution status as well.
+
+Railway PITR was enabled with a private archive bucket. Scheduled volume snapshot creation and scheduling were refused with `OAUTH_INSUFFICIENT_GRANT`. Recovery coverage and a separate-database restore drill are not yet verified. Do not claim backups are proven until an actual restore succeeds. Use a new sibling database for a drill; never restore a volume over staging. No account SSH key was registered.
