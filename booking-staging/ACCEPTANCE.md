@@ -12,7 +12,7 @@ A candidate-based, unbranded [pilot specification](PILOT-SPEC.md) is ready for o
 - Approve retention, account roles/MFA and the destination for operational alerts.
 - Decide whether notifications or payments are required; define scope before implementation.
 
-Current sample defaults: Europe/Skopje, one room, Monday–Saturday 09:00–18:00, Sunday closed; 30-day horizon, 30-minute lead time, 15-minute starts. Services are sample 60/45/30-minute treatments at €65/€55/€35. Manual retention only removes synthetic appointments ended over 90 days ago. These are not buyer-approved production rules.
+Current staging is explicitly activated with the fictional demo profile in SIMULATED-RULES.md: one 60-minute MKD 1,400 service; weekdays 10–18; lunch 13–14; 15-minute preparation/cleanup; 24-hour lead; 30-day horizon; 15-minute starts; exact 24-hour self-cancellation cutoff. These are simulated assumptions, not buyer-approved production rules. Local seed databases use the earlier sample until profile activation. Synthetic retention is manual after 30 days from completion/cancellation.
 
 ## Receiving developer walkthrough
 
@@ -44,4 +44,4 @@ Do not launch for real customers until production decisions and acceptance are r
 
 ## Fictional demo completion
 
-[Simulated rules](SIMULATED-RULES.md) are approved as a simulation. [Automated implementation checklist](DEMO-IMPLEMENTATION.md) tracks adoption and verification; approval of requirements does not mean these rules are implemented or approved for live use.
+[Simulated rules](SIMULATED-RULES.md) are approved as a simulation. [Automated implementation checklist](DEMO-IMPLEMENTATION.md) tracks adoption and verification; the fictional implementation is deployed and verified. Requirements and automated checks do not constitute human acceptance or production approval.

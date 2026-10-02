@@ -14,7 +14,7 @@ Separate from the reviewed `booking-design-pilot/` prototype. This version adds 
 
 Draft staging PR: https://github.com/sivica/sandbox/pull/2
 
-These are implementation defaults pending a buyer's actual rules. Seed rows are inserted once; edit business configuration deliberately through migrations/database administration. No public administration endpoint exists.
+These are initial seed defaults pending a buyer's actual rules. The deployed staging profile now uses the explicit fictional studio rules described below; local databases retain the initial sample until activated. Seed rows are inserted once. Configuration changes require authenticated owner administration.
 
 ## Local setup
 
@@ -81,7 +81,7 @@ Check deployment health and intended environment before upload. Source pushes ru
 
 ## Before accepting real customers
 
-Confirm the actual provider/calendar, timezone, services, staff/resources, holidays, lead/cancellation rules and supported browsers. Add authenticated business administration, retention/deletion policy, backup/restore verification, monitoring and business acceptance. Customer notifications and payment need separately agreed integrations.
+Confirm the actual provider/calendar, timezone, services, staff/resources, holidays, lead/cancellation rules and supported browsers. Review the implemented staging administration, retention controls, recovery evidence and monitoring against production requirements, and obtain business acceptance. Customer notifications and payment need separately agreed integrations.
 
 The bearer token grants access/cancellation to one test booking; losing it means the owner needs database administration to retrieve it. API rate limiting is in-memory per instance, not a distributed abuse control. Database credentials remain server-side; browser writes are same-origin, bodies/fields bounded, queries parameterized, API responses not cached, security headers applied. These controls do not make this fictional staging system production-ready.
 
@@ -91,9 +91,9 @@ Physical iPhone/VoiceOver remains outside the pilot scope; full TalkBack listeni
 
 Open `/admin.html` for the owner login. The deployment receives only `ADMIN_PASSWORD_HASH` (scrypt), never the plaintext password. Local credentials are stored outside the repository in `/Users/ivica/Work/kindred-staging-private/admin-credentials.txt`, permissions 0600. Do not share that file with the public handoff.
 
-Administration supports paginated bookings, cancellation, service duration/price/availability, weekly opening hours, and an audit trail. An 8-hour HttpOnly/SameSite Strict cookie protects sessions; writes also require a session-bound CSRF token. Login failures are throttled per IP. This is a single-owner staging account, without MFA or multiple roles. Changing service settings preserves existing booking duration and price. Opening-hour changes do not cancel existing appointments.
+Administration supports paginated bookings, cancellation, service duration/price/availability, weekly opening hours, and an audit trail. An 8-hour HttpOnly/SameSite Strict cookie protects sessions; writes also require a session-bound CSRF token. Login failures are throttled per IP. Owner and read-only support accounts are available; neither has MFA. Changing service settings preserves existing booking duration and price. Opening-hour changes do not cancel existing appointments.
 
-Retention is manual: preview then explicitly confirm deletion of synthetic bookings whose appointment ended more than 90 days ago. Future appointments remain. Automatic deletion is off. Business retention rules still need buyer agreement; this sample policy is not a production policy.
+Retention is manual: preview then explicitly confirm deletion of synthetic bookings whose completion or cancellation was more than 30 days ago. Future confirmed appointments remain. Automatic booking deletion is off. Business retention rules still need buyer agreement; this sample policy is not a production policy.
 
 Railway startup health checks use `/health` with a 60-second timeout. A separate `kindred-staging-monitor` cron service runs `node server/monitor.js` every five minutes, using private PostgreSQL and the public health endpoint. It writes checks to the admin operations view, keeps 30 days, and logs state changes without customer details. There is no outgoing notification integration. A failed cron execution is visible in Railway. Monitoring cannot record a failure while its database is unavailable, so inspect Railway execution status as well.
 
@@ -112,3 +112,7 @@ Use the operations page to record synthetic inquiries, manual contact/reconcilia
 A separate `support` account can view synthetic operational/audit history only, with no booking details or mutations. `SUPPORT_PASSWORD_HASH` configures its scrypt digest. Credentials remain outside the repository. MFA remains a production requirement and is not implemented for this disposable demo.
 
 Manual retention now previews bookings completed/cancelled over 30 days ago. Weekly review status is visible; deletion remains explicit. The monitor trims operational records after 37 days and audit history after 90 days, and records failure/recovery alerts as log entries only. There are no outgoing messages. Economics CSV contains recorded synthetic outcomes; fee/time-value and success targets are fictional hypotheses, not measured income. Human duties (reconciliation, customer contact, refunds) are represented as manual records and cannot be claimed executed without an actual operator.
+
+### Verification database safety
+
+`npm test` requires a disposable PostgreSQL database. Integration tests change sample rules and clear test operational records; never point them at staging or production. Live staging verification uses synthetic API/browser requests, cancels only reservations it created, and leaves audit evidence intact.

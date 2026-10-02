@@ -1,5 +1,16 @@
 # Kindred staging — done and remaining
 
+## Current fictional demo
+
+All implementation items in DEMO-IMPLEMENTATION.md are complete. The explicit fictional studio profile is active on staging: one MKD 1,400/60-minute service, weekdays, lunch, occupied preparation/cleanup buffers, 24-hour lead and cancellation rules. Owner entries, closures/travel, rescheduling, no-show, private receipts, manual operations, support viewer, retention review and economics export are deployed.
+
+Verified runtime: `4816737e7e318ee18422aa7342d51e5a563d4770`. Both CI runs succeeded; 6 calendar checks, 11 PostgreSQL Node results and 12 browser executions passed. New-profile live synthetic API/mobile walkthrough also passed. Test reservations were cancelled and sessions closed. See [current evidence](evidence/DEMO-REPORT.md).
+
+Only real-business production decisions and independent human acceptance remain; no human acceptance or achieved commercial benefit is claimed. Manual duties are represented as records. Scheduled backups remain deferred to production and nonblocking for this synthetic demo.
+
+## Earlier implementation and evidence
+
+
 ## Implemented
 - Bundled React runtime and local system fonts.
 - PostgreSQL services, room, opening hours, migrations and persisted bookings.
@@ -11,7 +22,7 @@
 - Unit, PostgreSQL integration and three-profile browser checks; separate GitHub Actions workflow.
 
 ## Verification and deployment
-Verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only edits preserve it.
+Historical verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only edits preserve it.
 - 5/5 calendar checks, 8/8 PostgreSQL API scenarios (9 Node results including parent), 12/12 browser executions passed in 48.9s with no retries.
 - [Push CI](https://github.com/sivica/sandbox/actions/runs/36934271659) and [PR CI](https://github.com/sivica/sandbox/actions/runs/36934277944) succeeded. Downloaded evidence and settled confirmation inspected; see [report](evidence/REPORT.md).
 - Private Railway deployment `3dd0fe52-d5e1-43fc-bb00-73480d5d8307` succeeded; logs show server ready after migrations.
