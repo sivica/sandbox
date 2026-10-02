@@ -27,7 +27,7 @@ globalThis.fetch=async(input,options={})=>{
   if(scenario==='conflict')return respond({code:'slot_unavailable',error:'This time was just reserved. Choose another time; your details are kept.'},409);
   const payload=JSON.parse(options.body);const key=options.headers['Idempotency-Key'];let entry=Object.values(records).find(x=>x.key===key);
   if(!entry){const id=crypto.randomUUID();entry={key,accessToken:'a'.repeat(64),booking:{id,reference:'PREVIEW-'+id.slice(0,6),status:'confirmed',startsAt:payload.startsAt,endsAt:new Date(Date.parse(payload.startsAt)+3600000).toISOString(),name:payload.name,email:payload.email,timezone:business.timezone,service,price:1400,currency:'MKD'}};records[id]=entry;save();}
-  if(scenario==='unresolved'&&attempts++===0)throw Error('Simulated interrupted response after preview persistence');
+  if(scenario==='unresolved'&&!entry.interrupted){entry.interrupted=true;save();throw Error('Simulated interrupted response after preview persistence');}
   return respond({booking:entry.booking,accessToken:entry.accessToken});
  }
  const match=url.pathname.match(/^\/api\/bookings\/([^/]+)(\/cancel)?$/);

@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": "empty",
+    "pass": true
+  },
+  {
+    "scenario": "no-services",
+    "pass": true
+  },
+  {
+    "scenario": "availability-error",
+    "pass": true
+  },
+  {
+    "scenario": "conflict",
+    "pass": true
+  },
+  {
+    "scenario": "unresolved",
+    "pass": true
+  },
+  {
+    "scenario": "late-cancellation",
+    "pass": true
+  }
+]
