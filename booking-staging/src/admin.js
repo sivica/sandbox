@@ -53,6 +53,16 @@ async function bookings() {
       element("p", b.email),
       element("p", b.note),
       element("p", b.reference),
+      element(
+        "p",
+        `Channel: ${b.channel || "web"}; contact: ${b.contact_route || "email"}; outcome: ${b.outcome || "pending"}; paid: ${b.paid ? "yes" : "no"}`,
+      ),
+      b.late_cancel_requested
+        ? element(
+            "p",
+            "Late cancellation request: owner action required; slot remains reserved.",
+          )
+        : element("span"),
     );
     if (b.status === "confirmed") {
       const button = element("button", "Cancel booking");

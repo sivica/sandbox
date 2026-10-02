@@ -144,8 +144,8 @@ test("real PostgreSQL booking API: persistence, concurrency, retries, protection
         const id = randomUUID();
         await assert.rejects(
           pool.query(
-            `INSERT INTO bookings(id,reference,service_id,resource_id,starts_at,ends_at,price_cents,currency,name,email,idempotency_key,request_hash,access_token_hash)
-        SELECT $1::uuid,$1::text,service_id,resource_id,starts_at,ends_at,price_cents,currency,name,email,$2,'test','test' FROM bookings WHERE id=$3`,
+            `INSERT INTO bookings(id,reference,service_id,resource_id,starts_at,ends_at,occupied_from,occupied_until,price_cents,currency,name,email,idempotency_key,request_hash,access_token_hash)
+        SELECT $1::uuid,$1::text,service_id,resource_id,starts_at,ends_at,occupied_from,occupied_until,price_cents,currency,name,email,$2,'test','test' FROM bookings WHERE id=$3`,
             [id, randomUUID(), first.body.booking.id],
           ),
           { code: "23P01" },
