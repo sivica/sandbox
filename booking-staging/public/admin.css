@@ -1,0 +1,59 @@
+body {
+  font: 17px system-ui;
+  background: #faf8f4;
+  color: #242421;
+  margin: 0;
+}
+main {
+  max-width: 850px;
+  margin: auto;
+  padding: 24px;
+}
+label {
+  display: block;
+  margin: 12px 0;
+}
+input,
+select,
+button {
+  font: inherit;
+  padding: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+input {
+  display: block;
+}
+button {
+  cursor: pointer;
+  margin: 8px 4px 8px 0;
+}
+article {
+  border: 1px solid #aaa;
+  padding: 16px;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+h2 {
+  margin-top: 36px;
+}
+#message {
+  min-height: 1.5em;
+  color: #643b12;
+}
+input[type="checkbox"] {
+  display: inline;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #386544;
+  outline-offset: 3px;
+}
+[hidden] {
+  display: none;
+}

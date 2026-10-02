@@ -1,0 +1,17 @@
+[
+  {
+    "file": "index.html",
+    "matches": true,
+    "sha256": "378e8ca94ae5b4855f6db11192cce53292444ffa13542d8dba7a8418fe7ec59a"
+  },
+  {
+    "file": "app.js",
+    "matches": true,
+    "sha256": "67eacf6c6fbd5aaed838202f3e54e06280dd6dc23829342c2bb64055b2b443d6"
+  },
+  {
+    "file": "styles.css",
+    "matches": true,
+    "sha256": "7c5a3550d513377f0a01409dac76fedaadef68860b74f4a751690daaf8cc0bda"
+  }
+]

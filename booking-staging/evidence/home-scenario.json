@@ -1,0 +1,7 @@
+{
+  "scenario": "5a",
+  "status": "passed",
+  "occupiedLocal": "10:15–12:45 Europe/Skopje",
+  "checks": "Travel block removes overlapping studio appointments",
+  "time": "2026-10-02T16:30:50.214Z"
+}
