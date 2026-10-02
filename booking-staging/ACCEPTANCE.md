@@ -41,3 +41,7 @@ Chat follow-up: active hourly automation “Kindred staging follow-up”; checks
 Snapshots: current Railway OAuth grant refused scheduling/creation. Reauthorize Railway for this project or enable daily/weekly snapshots in its dashboard, then verify the result. No SSH credentials are required or registered for this flow.
 
 Do not launch for real customers until production decisions and acceptance are recorded. Keep real customer data out of staging.
+
+## Fictional demo completion
+
+[Simulated rules](SIMULATED-RULES.md) are approved as a simulation. [Automated implementation checklist](DEMO-IMPLEMENTATION.md) tracks adoption and verification; approval of requirements does not mean these rules are implemented or approved for live use.
