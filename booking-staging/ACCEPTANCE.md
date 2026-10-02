@@ -38,7 +38,7 @@ No human acceptance is recorded yet. Automated or role-play reviews do not repla
 
 Cloud: Railway checks staging every five minutes even when the Mac sleeps.
 Chat follow-up: active hourly automation “Kindred staging follow-up”; checks health, CI and actionable staging work, and reports only meaningful changes. Depends on the Mac and Codex being available.
-Snapshots: current Railway OAuth grant refused scheduling/creation. Reauthorize Railway for this project or enable daily/weekly snapshots in its dashboard, then verify the result. No SSH credentials are required or registered for this flow.
+Snapshots: dashboard confirms backup creation requires Pro, while the current workspace is Hobby; no volume backups exist. CLI also refused scheduling/creation. The account owner must decide whether to upgrade or approve another backup approach; reauthorization alone is insufficient. No SSH credentials are required or registered for this flow.
 
 Do not launch for real customers until production decisions and acceptance are recorded. Keep real customer data out of staging.
 

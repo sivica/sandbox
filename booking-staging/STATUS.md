@@ -24,7 +24,7 @@ Verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only e
 ## Remaining for real customer use
 - Actual buyer's provider/calendar and business rules.
 - Confirm production admin roles/MFA, retention policy, backup coverage and alert destination; staging controls are implemented.
-- Railway scheduled volume snapshots need account permission (OAUTH_INSUFFICIENT_GRANT).
+- Railway dashboard confirms backup creation requires Pro; current workspace is Hobby and has no volume backups. CLI also returned OAUTH_INSUFFICIENT_GRANT. Reauthorization alone is insufficient.
 - Any agreed notifications/payment integrations.
 - Independent human developer and buyer acceptance.
 
@@ -37,3 +37,6 @@ Temporary Railway SSH key registration was rejected by automatic approval review
 - CI: https://github.com/sivica/sandbox/actions/runs/36992404429 and https://github.com/sivica/sandbox/actions/runs/36992408605
 - PITR archive enabled and separate-database restore verified: 12 immutable booking rows matched, three services present, overlap constraint preserved. Temporary recovery services removed after verification.
 - No outgoing alerts configured. Admin password is local outside the repository; do not distribute it.
+
+## Backup dashboard inspection
+On 2 October 2026 the authenticated dashboard showed PITR enabled and archive coverage, but no volume backups. Creating backups/PITR is restricted to Pro. A restore-target estimate exceeded the Hobby 5 GB volume limit; choose a target that fits or review plan/storage capacity before any future drill. The earlier separate restore succeeded, but that does not guarantee every target fits. Evidence: local kindred-operations-evidence/railway-backup-plan.jpg.
