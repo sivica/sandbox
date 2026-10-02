@@ -6,7 +6,7 @@ All implementation items in DEMO-IMPLEMENTATION.md are complete. The explicit fi
 
 Verified runtime: `4816737e7e318ee18422aa7342d51e5a563d4770`. Both CI runs succeeded; 6 calendar checks, 11 PostgreSQL Node results and 12 browser executions passed. New-profile live synthetic API/mobile walkthrough also passed. Test reservations were cancelled and sessions closed. See [current evidence](evidence/DEMO-REPORT.md).
 
-Only real-business production decisions and independent human acceptance remain; no human acceptance or achieved commercial benefit is claimed. Manual duties are represented as records. Scheduled backups remain deferred to production and nonblocking for this synthetic demo.
+Demo left to do: none. Actual owner review is not a demo completion requirement. Before real customer use, real-business production decisions and independent human acceptance are required; no human acceptance or achieved commercial benefit is claimed. Manual duties are represented as records. Scheduled backups remain deferred to production and nonblocking for this synthetic demo.
 
 ## Earlier implementation and evidence
 

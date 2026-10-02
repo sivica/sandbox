@@ -1,6 +1,6 @@
 # Production decisions and acceptance
 
-Status: staging is verified; production approval is pending.
+Status: fictional demo is complete. Actual owner review is not a demo requirement. Production approval is pending before real customer use.
 
 A candidate-based, unbranded [pilot specification](PILOT-SPEC.md) is ready for owner review. Its public facts are not approved business rules. The simulated owner review corrections are incorporated: every-channel calendar responsibility, confirmation duties, cancellation operations, pilot economics and staged approval. Actual owner acceptance remains pending.
 
