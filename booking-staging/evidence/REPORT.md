@@ -10,6 +10,14 @@ Verified code/test/build source: `0a80b510c7e8f872d009508c836bc6514e6f227d`. Lat
 
 API evidence covers simultaneous identical requests, changed-key payload rejection, retrieval via a new server instance, authorization, overlapping different-service requests, direct PostgreSQL constraint enforcement, invalid data, cancellation/released capacity and rate limiting. Browser evidence covers validation correction, pending locks, saved confirmation after reload, lost response after commit with same-request recovery, slot conflict/reselection, empty menu, Sunday unavailability, interrupted availability, axe and 200% text. These are browser emulation/automated scans, not physical screen-reader conformance.
 
-Private Railway deployment `3dd0fe52-d5e1-43fc-bb00-73480d5d8307` succeeded in environment staging. Startup logs confirm readiness after migrations. The database has no public endpoint and the app has no public domain. Live browser verification is not claimed. Creating a public domain was rejected by automatic approval review pending explicit owner approval. Temporary SSH registration was rejected as well; no key was registered.
+Private Railway deployment `3dd0fe52-d5e1-43fc-bb00-73480d5d8307` succeeded in environment staging. Startup logs confirm readiness after migrations. The database has no public endpoint. The owner subsequently approved public app access; the initial domain rejection is resolved. Temporary SSH registration was rejected as well; no key was registered.
 
 All test data was invented. CI databases were disposable; API tests removed their own rows and browser tests cancelled their bookings. No customer notification or payment occurred. Build succeeded and npm audit reported zero vulnerabilities at install; this is not a production security audit.
+
+## Public staging check
+
+Owner-approved public preview: https://kindred-booking-staging-staging.up.railway.app/
+
+Tested deployment `f7ad81ee-3be6-4c3d-b776-eb2b1bf9d22f`, application code unchanged from 0a80b51. `BASE_URL` browser suite: **12/12 passed in approximately 1.3 minutes**, no retries, mobile Chromium/WebKit and landscape Chromium. Covered booking, validation, pending locks, durable confirmation after reload, lost response after commit with safe same-key replay, slot conflict/reselection, cancellation, empty/unavailable/error states, axe and 200% text. /health returned HTTP 200. Served HTML/JS/CSS matched the local bundle; hashes in live/source-match.json.
+
+Only invented details were used. Browser test bookings were cancelled after each test; cancelled test records remain in staging PostgreSQL. No customer messages or payments were sent. Later documentation-only deployments preserve the verified application bundle.

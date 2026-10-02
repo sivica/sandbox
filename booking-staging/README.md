@@ -73,7 +73,9 @@ railway link --project a549eb28-d30d-4e2d-a8ff-f632fac46f24 --environment stagin
 railway up . --path-as-root --service kindred-booking-staging --environment staging --detach
 ```
 
-A private staging deployment is running; no public domain exists. Creating a public preview was blocked by automatic approval review pending explicit owner approval. CI/browser evidence and deployment identifiers are in STATUS.md and evidence/REPORT.md. The API readiness endpoint is implemented; Railway's platform healthcheck path is not yet configured.
+Public staging preview (owner-approved): https://kindred-booking-staging-staging.up.railway.app/
+
+All 12 deployed browser checks passed, including saved confirmation after reload, conflict recovery, safe retry and cancellation. Use invented details only; this is not a real studio. CI/live evidence and deployment identifiers are in STATUS.md and evidence/REPORT.md. The API readiness endpoint is implemented; Railway's platform healthcheck path is not yet configured.
 
 Check deployment health and intended environment before upload. Source pushes run CI but do not automatically deploy. Revert to a retained known-good app deployment if needed. Database rollback requires a separately planned migration; never drop booking tables as a routine rollback. PostgreSQL service/storage and API hosting incur Railway usage charges while running.
 

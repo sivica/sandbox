@@ -15,7 +15,9 @@ Verified code: `0a80b510c7e8f872d009508c836bc6514e6f227d`; later delivery-only e
 - 5/5 calendar checks, 8/8 PostgreSQL API scenarios (9 Node results including parent), 12/12 browser executions passed in 48.9s with no retries.
 - [Push CI](https://github.com/sivica/sandbox/actions/runs/36934271659) and [PR CI](https://github.com/sivica/sandbox/actions/runs/36934277944) succeeded. Downloaded evidence and settled confirmation inspected; see [report](evidence/REPORT.md).
 - Private Railway deployment `3dd0fe52-d5e1-43fc-bb00-73480d5d8307` succeeded; logs show server ready after migrations.
-- No public staging domain exists; no deployed-browser check is claimed. Automatic approval review requires explicit owner approval for internet exposure.
+- Owner approved public staging access. Preview: https://kindred-booking-staging-staging.up.railway.app/
+- 12/12 deployed browser checks passed in approximately 1.3 minutes, with no retries. HTML/JS/CSS match the built source; /health returned HTTP 200.
+- Browser-created test bookings were cancelled, releasing their slots. The database remains private.
 - The API implements /health and CI uses it for readiness; Railway's platform healthcheck path remains unconfigured. Configure/verify that before real customer launch alongside monitoring.
 
 
