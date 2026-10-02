@@ -14,3 +14,7 @@ Runtime source dbc032c2aa98ba13bfb71e7bf92642724357661b; subsequent preview/expo
 - Both chat automation and Railway monitor remain stopped; neither was restarted by deployment.
 
 Remaining: actual Codex prompt/refinement desktop footage and final 60-second edited video. FFmpeg reports camera/microphone devices but no display device; capture permission/route requires resolution. No fabricated generation footage, real customer data, messages, payments, production launch, owner acceptance or achieved business results.
+
+## Product video delivery
+
+A separate 60.000s/1920×1080/H.264 product demo is assembled from the saved Codex design brief, actual generated theme screenshots, export inventory and real staging browser recording. All frames decoded successfully; brief/theme/staging frames were visually inspected. It explicitly states that live Codex generation footage is absent. Computer Use refused control of the Codex app for safety reasons; native capture was stopped and no bypass attempted. This completes an edited product walkthrough, while the originally specified live Codex generation clip remains blocked.
