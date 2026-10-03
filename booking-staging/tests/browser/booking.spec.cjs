@@ -1,6 +1,9 @@
 const { test, expect } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
 const created = new Map();
+const simulated = process.env.TEST_PROFILE === "simulated";
+const treatmentName = simulated ? "Demo Relaxation" : "Fresh start";
+const treatmentId = simulated ? "demo-relaxation" : "glow";
 test.beforeEach(async ({ page }) => {
   page.on("response", async (response) => {
     if (
@@ -48,9 +51,9 @@ async function toDetails(page, request) {
   await expect(
     page.getByRole("heading", { name: "Feel like yourself, again." }),
   ).toBeVisible();
-  await page.getByRole("button", { name: /Fresh start/ }).click();
+  await page.getByRole("button", { name: new RegExp(treatmentName) }).click();
   await expect(
-    page.getByRole("heading", { name: "Fresh start", exact: true }),
+    page.getByRole("heading", { name: treatmentName, exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Choose a time →" }).click();
   const info = await (await request.get("/api/services")).json();
@@ -61,7 +64,7 @@ async function toDetails(page, request) {
     d.setUTCDate(d.getUTCDate() + i);
     date = d.toISOString().slice(0, 10);
     const data = await (
-      await request.get(`/api/slots?serviceId=glow&date=${date}`)
+      await request.get(`/api/slots?serviceId=${treatmentId}&date=${date}`)
     ).json();
     if (data.slots.length) {
       chosen = data.slots[0];
@@ -186,7 +189,7 @@ test("slot taken between selection and submit retains details and permits resele
   const response = await request.post("/api/bookings", {
     headers: { "Idempotency-Key": require("node:crypto").randomUUID() },
     data: {
-      serviceId: "glow",
+      serviceId: treatmentId,
       startsAt: chosen.startsAt,
       name: "Conflict Tester",
       email: "conflict@example.com",

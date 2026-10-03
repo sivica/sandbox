@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['booking-staging/**', '.github/workflows/booking-staging.yml']
   push:
-    branches: ['kindred-booking-staging']
+    branches: ['kindred-booking-staging', 'kindred-design-workflow']
     paths: ['booking-staging/**', '.github/workflows/booking-staging.yml']
   workflow_dispatch:
 permissions:
@@ -12,6 +12,9 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      matrix:
+        profile: [sample, simulated]
     services:
       postgres:
         image: postgres:17.6
@@ -29,6 +32,8 @@ jobs:
       BOOKING_TOKEN_SECRET: ci-only-invented-secret-32-characters-minimum
       PORT: '4174'
       HOST: 127.0.0.1
+      TEST_PROFILE: ${{ matrix.profile }}
+      DISPOSABLE_TEST_DATABASE: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,11 +44,14 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium webkit
-      - run: npm test
+      - run: npm run test:unit && npm run test:api
+      - if: matrix.profile == 'simulated'
+        run: node scripts/activate-test-profile.mjs
+      - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: booking-staging-evidence
+          name: booking-staging-evidence-${{ matrix.profile }}
           path: |
             booking-staging/playwright-report/
             booking-staging/test-results/

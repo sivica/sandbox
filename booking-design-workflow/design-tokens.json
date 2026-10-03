@@ -1,0 +1,38 @@
+{
+  "calm-spa": {
+    "ink": "#243d35",
+    "muted": "#52645b",
+    "paper": "#fffdf8",
+    "line": "#d6dfd5",
+    "accent": "#244f40",
+    "soft": "#eaf0e4",
+    "canvas": "#e6ebe4",
+    "radius": "22px",
+    "space": "24px",
+    "heading": "Georgia, serif"
+  },
+  "clean-clinic": {
+    "ink": "#15364c",
+    "muted": "#486271",
+    "paper": "#ffffff",
+    "line": "#cddde6",
+    "accent": "#165b7a",
+    "soft": "#eaf5fa",
+    "canvas": "#e7eff4",
+    "radius": "10px",
+    "space": "24px",
+    "heading": "system-ui, sans-serif"
+  },
+  "modern-boutique": {
+    "ink": "#3e2947",
+    "muted": "#67566e",
+    "paper": "#fffafc",
+    "line": "#e6d6e1",
+    "accent": "#693855",
+    "soft": "#f4e6ed",
+    "canvas": "#efe6ee",
+    "radius": "16px",
+    "space": "24px",
+    "heading": "Georgia, serif"
+  }
+}

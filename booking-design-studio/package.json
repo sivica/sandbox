@@ -1,0 +1,23 @@
+{
+  "name": "kindred-design-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "electron .",
+    "personal": "node launch-personal.mjs",
+    "preview": "node preview-server.mjs"
+  },
+  "dependencies": {
+    "fflate": "0.8.3",
+    "jose": "6.2.12",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "esbuild": "0.28.2"
+  }
+}
