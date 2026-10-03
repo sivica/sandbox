@@ -7,9 +7,15 @@
 - Electron main/renderer boundary, no privileged preview bridge, no generated executable code.
 - Build completed successfully; browser opened and sample gallery/menu rendered.
 
+## Personal mode implemented
+- Original ChatGPT subscription connector, official browser OAuth with PKCE/state/nonce and verified identity.
+- Encrypted credentials, separate personal storage, account model discovery, renewable-token rotation and completed-response-only generation.
+- Run `npm ci`, `npm run build`, then `npm run personal`.
+- Build passed; application launched. Mac locked: real account sign-in and inference remain unverified.
+
 ## Left
-- Resolve the DevKit's noncommercial restriction or choose an authorized independent provider for the intended use.
-- Implement and verify real subscription authorization, inference, renewal, revocation and limit recovery.
+- Complete personal ChatGPT sign-in and grant plan access after unlocking the Mac. Commercial distribution eligibility remains separate.
+- Verify the implemented subscription authorization, inference, renewal, revocation and limit recovery with a real account.
 - Model-supported reference-image submission (currently local preview/removal only).
 - Full interactive proposal preview and automatic screen-copy integration (current previews are static; runnable booking baseline is included in exports).
 - Browser/mobile, export clean-install, security and screen-reader acceptance checks; not run this phase.

@@ -17,7 +17,17 @@ Node 22+ and macOS: `npm ci`, `npm run build`, `npm start`. For the browser visu
 
 The static proposals are data rendered by trusted code, not arbitrary executable model output. Exported tokens update the selected runnable booking style; screen-copy proposals are separate files for integration review. Screen proposal actions are visual; the runnable exported booking controller contains the complete synthetic booking flow.
 
-## Connection blocker
+## Personal subscription mode
+
+For your own local use, run `npm run personal` after `npm ci` and `npm run build`. Unlock the Mac, click **Continue with ChatGPT**, and finish the official browser sign-in and plan-access consent. An eligible subscription and account authorization are required. No API key or separate usage billing fallback is provided.
+
+This mode uses an original connector implemented from OpenAI's public protocol documentation, not DevKit code or existing Codex credentials. It discovers your account's available models, streams completed design responses, rotates renewable credentials and supports disconnect/revocation. Credentials are encrypted using the operating system and stored separately under macOS Application Support/kindred-personal-design-studio. Project drafts and exports are local; prompts are sent to OpenAI when you generate.
+
+Build passed. Sign-in, completed inference, renewal and revocation have **not** been verified with a real account. The app launched, but the Mac was locked. Use fictional treatment-booking briefs while completing validation. Reference images are preview-only and cannot be submitted for generation yet.
+
+Personal mode is separate from hosted or paid distribution; this implementation does not establish eligibility for those uses.
+
+## Original prototype connection limitation
 
 OpenAI's official DevKit is under a Noncommercial License which excludes development with an intended commercial application, even when local. This project's possible commercial use cannot be assumed permitted. No DevKit code, trademark assets or existing Codex credentials are copied or reused. No sign-in or model request is made by default.
 
@@ -26,7 +36,7 @@ Sources:
 - https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt
 - https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference
 
-Resolve commercial licensing/eligibility or select an authorized independent implementation before enabling real subscription generation. Hosted distribution separately requires provider access approval. The UI and connection wiring are implemented; real authorization and generation remain unverified.
+The personal mode above now supplies an original independent implementation. Resolve commercial licensing/eligibility before any commercial distribution. Hosted distribution separately requires provider access approval. The UI and connection wiring are implemented; real authorization and generation remain unverified.
 
 ## Authorized provider boundary
 

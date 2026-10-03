@@ -13,6 +13,18 @@ let window,
   provider,
   active,
   epoch = 0;
+const personal = process.env.KINDRED_PERSONAL === "1";
+if (personal) {
+  app.setName("Kindred Personal Design Studio");
+  app.setPath(
+    "userData",
+    join(app.getPath("appData"), "kindred-personal-design-studio"),
+  );
+}
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+  process.exit(0);
+}
 const ui = pathToFileURL(resolve(__dirname, "../dist/index.html")).href;
 const unavailable =
   "ChatGPT subscription connection is not configured. The official DevKit has a noncommercial license; resolve licensing and provider eligibility before enabling it for this project.";
@@ -35,6 +47,7 @@ async function state() {
   return {
     session: safeSession(provider ? await provider.getSession() : null),
     configured: !!provider,
+    personal,
     notice: provider ? "" : unavailable,
   };
 }
@@ -43,8 +56,10 @@ app.whenReady().then(async () => {
   await mkdir(home, { recursive: true });
   // Deliberately no DevKit code or credential reuse. A separately authorized,
   // independently supplied provider may implement the documented contract.
-  if (process.env.KINDRED_AUTH_PROVIDER) {
-    const entry = resolve(process.env.KINDRED_AUTH_PROVIDER);
+  if (personal || process.env.KINDRED_AUTH_PROVIDER) {
+    const entry = personal
+      ? resolve(__dirname, "personal-provider.mjs")
+      : resolve(process.env.KINDRED_AUTH_PROVIDER);
     const module = await import(pathToFileURL(entry).href);
     provider = await module.createProvider({
       storageDir: join(home, "connection"),
@@ -54,7 +69,12 @@ app.whenReady().then(async () => {
         await shell.openExternal(url);
       },
       encryption: {
-        available: () => safeStorage.isEncryptionAvailable(),
+        available: () =>
+          safeStorage.isEncryptionAvailable() &&
+          (process.platform !== "linux" ||
+            ["gnome_libsecret", "kwallet", "kwallet5", "kwallet6"].includes(
+              safeStorage.getSelectedStorageBackend(),
+            )),
         encrypt: (s) => safeStorage.encryptString(s),
         decrypt: (b) => safeStorage.decryptString(Buffer.from(b)),
       },
@@ -74,7 +94,9 @@ app.whenReady().then(async () => {
     width: 1200,
     height: 900,
     minWidth: 320,
-    title: "Kindred Design Studio",
+    title: personal
+      ? "Kindred Personal Design Studio"
+      : "Kindred Design Studio",
     webPreferences: {
       preload: join(__dirname, "preload.cjs"),
       nodeIntegration: false,
@@ -142,16 +164,15 @@ app.whenReady().then(async () => {
       if (action === "models") {
         const models = await provider.listModels();
         return {
-          models: models
-            .slice(0, 100)
-            .map((m) => ({
-              slug: String(m.slug).slice(0, 100),
-              displayName: String(m.displayName).slice(0, 100),
-            })),
+          models: models.slice(0, 100).map((m) => ({
+            slug: String(m.slug).slice(0, 100),
+            displayName: String(m.displayName).slice(0, 100),
+          })),
         };
       }
       if (action === "generate") {
         if (active) throw Error("A generation is already running");
+        const expectedEpoch = epoch;
         if (!(await provider.getSession()).sharing)
           throw Error("ChatGPT plan permission required");
         if (
@@ -167,6 +188,9 @@ app.whenReady().then(async () => {
         )
           throw Error("Unsupported style");
         const catalog = await provider.listModels();
+        if (epoch !== expectedEpoch)
+          throw Error("The account changed; generation was cancelled.");
+        if (active) throw Error("A generation is already running");
         if (!catalog.some((m) => m.slug === payload.model))
           throw Error("Select an available model");
         const id = ++epoch;

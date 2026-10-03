@@ -456,10 +456,13 @@ function App() {
                     sequence.current++;
                     call("cancel");
                     run("Disconnecting…", async () => {
-                      const r = await call("disconnect");
-                      setConnection(r);
-                      setModels([]);
-                      setModel("");
+                      try {
+                        await call("disconnect");
+                      } finally {
+                        setConnection(await call("state"));
+                        setModels([]);
+                        setModel("");
+                      }
                     });
                   }}
                 >
@@ -505,9 +508,13 @@ function App() {
               Generation counts toward your plan limits.
             </p>
             <div className="local-notice">
-              Connection pending: a licensed provider must be configured.
+              {connection.personal
+                ? "Personal, local-only tool. Continue with ChatGPT to sign in and grant plan access."
+                : "Connection pending: a licensed provider must be configured."}
               <br />
-              Explore the authored samples in the local workspace.
+              {connection.personal
+                ? "Credentials stay encrypted on this Mac. Use fictional design briefs."
+                : "Explore the authored samples in the local workspace."}
             </div>
           </section>
         ) : (
@@ -644,8 +651,9 @@ function App() {
         </div>
       </main>
       <footer>
-        Local design prototype · synthetic bookings · connection pending
-        licensing/eligibility
+        {connection.personal
+          ? "Personal local design tool · synthetic bookings · uses your authorized ChatGPT allowance"
+          : "Local design prototype · synthetic bookings · connection pending licensing/eligibility"}
       </footer>
       <dialog
         ref={dialog}
