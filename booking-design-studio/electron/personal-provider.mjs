@@ -16,11 +16,18 @@ const resource = "https://api.openai.com/v1";
 const appName = "Kindred Personal Design Studio";
 const permission = "chatgpt.tokens.use.direct";
 const random = () => randomBytes(48).toString("base64url");
-const match = (a, b) =>
-  typeof a === "string" &&
-  typeof b === "string" &&
-  a.length === b.length &&
-  timingSafeEqual(Buffer.from(a), Buffer.from(b));
+const match = (a, b) => {
+  if (
+    typeof a !== "string" ||
+    typeof b !== "string" ||
+    !/^[A-Za-z0-9_-]{64}$/.test(a) ||
+    !/^[A-Za-z0-9_-]{64}$/.test(b)
+  )
+    return false;
+  const left = Buffer.from(a),
+    right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
+};
 const errorMessages = {
   subscription_sharing_usage_limit_exceeded:
     "Your ChatGPT usage limit was reached. Open Manage usage and try again when available.",
@@ -422,7 +429,13 @@ export async function createProvider({ storageDir, openBrowser, encryption }) {
             res.end();
             return;
           }
-          if (consume || !match(u.searchParams.get("state"), state)) {
+          let verified = false;
+          try {
+            verified =
+              u.searchParams.getAll("state").length === 1 &&
+              match(u.searchParams.get("state"), state);
+          } catch {}
+          if (consume || !verified) {
             res.writeHead(400);
             res.end("This sign-in return could not be verified.");
             return;

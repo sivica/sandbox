@@ -6,6 +6,8 @@ const actions = new Set([
   "cancelConnect",
   "disconnect",
   "models",
+  "profiles",
+  "selectProfile",
   "generate",
   "cancel",
   "usage",

@@ -22,3 +22,13 @@
 - Actual connected generation/refinement/export demo footage; no fictional generation claims.
 
 No production deployment or monitoring restart. The existing booking backend remains unchanged.
+
+## Review corrections completed
+- Malformed, Unicode, duplicate and oversized callback state is rejected before constant-time comparison; parsing failures are contained.
+- Pending results preserve newer drafts and cannot replace a newly selected version/sample.
+- Failed operations return safe session state; invalid credentials clear stale models and expose reconnect.
+- Active account identity and registration are visible; saved account selection is distinct from Add account. Routine sign-in does not force consent.
+- Preview, rename and account dialogs have accessible names.
+- Dedicated studio CI covers build plus synthetic protocol, browser, recovery and export checks; PR scope updated.
+
+Verification: build passed; 18 protocol checks, 13 browser/export checks and one terminal-session recovery check passed (32 total). All identity/model responses are synthetic; encryption tests use a fake implementation. Actual macOS keychain, account access, inference, renewal/revocation, physical devices and screen-reader listening remain unverified. The existing video remains an authored-sample prototype.

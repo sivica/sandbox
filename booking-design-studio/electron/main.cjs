@@ -33,6 +33,7 @@ const safeSession = (s) => ({
     ? s.status
     : "disconnected",
   sharing: s?.sharing === true,
+  profileId: String(s?.profileId || "").slice(0, 100),
   identity: {
     name: String(s?.identity?.name || "").slice(0, 100),
     email: String(s?.identity?.email || "").slice(0, 150),
@@ -145,15 +146,39 @@ app.whenReady().then(async () => {
       }
       if (
         !provider &&
-        ["connect", "disconnect", "models", "generate"].includes(action)
+        [
+          "connect",
+          "disconnect",
+          "models",
+          "generate",
+          "profiles",
+          "selectProfile",
+        ].includes(action)
       )
         throw Error(unavailable);
       if (action === "connect") {
         cancel();
         await provider.signIn({
           newProfile: payload?.newProfile === true,
-          reconsent: true,
+          profileId: payload?.profileId,
+          reconsent: payload?.reconsent === true,
         });
+        return state();
+      }
+      if (action === "profiles") {
+        return {
+          profiles: (await provider.listProfiles()).map((p) => ({
+            id: String(p.id).slice(0, 100),
+            label: String(p.label || "Saved account").slice(0, 100),
+            ...safeSession({ ...p, profileId: p.id }),
+          })),
+        };
+      }
+      if (action === "selectProfile") {
+        cancel();
+        if (typeof payload?.id !== "string")
+          throw Error("Select a saved account");
+        await provider.selectProfile(payload.id);
         return state();
       }
       if (action === "disconnect") {
@@ -239,7 +264,15 @@ app.whenReady().then(async () => {
       }
       throw Error("Unsupported action");
     } catch (error) {
-      return { error: String(error.message).slice(0, 500) };
+      let snapshot = null;
+      try {
+        snapshot = await state();
+      } catch {}
+      return {
+        error: String(error.message).slice(0, 500),
+        code: String(error.code || "request_failed").slice(0, 100),
+        connection: snapshot,
+      };
     }
   });
   await window.loadURL(ui);

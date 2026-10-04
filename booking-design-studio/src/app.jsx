@@ -14,7 +14,12 @@ const key = "kindred-studio-project-v1";
 async function call(action, payload) {
   if (desktop) {
     const r = await window.kindred.call(action, payload);
-    if (r.error) throw Error(r.error);
+    if (r.error) {
+      const error = Error(r.error);
+      error.code = r.code;
+      error.connection = r.connection;
+      throw error;
+    }
     return r;
   }
   if (action === "state") {
@@ -63,6 +68,7 @@ function App() {
     [ready, setReady] = useState(false),
     [connection, setConnection] = useState({ configured: false, session: {} }),
     [models, setModels] = useState([]),
+    [profiles, setProfiles] = useState([]),
     [model, setModel] = useState(""),
     [appearance, setAppearance] = useState("dark"),
     [busy, setBusy] = useState(""),
@@ -79,6 +85,7 @@ function App() {
     dialog = useRef(),
     returnFocus = useRef(),
     sequence = useRef(0),
+    draftRevision = useRef(0),
     saveQueue = useRef(Promise.resolve());
   const selected = project.versions.find(
     (v) => v.manifest.id === project.selected,
@@ -89,13 +96,27 @@ function App() {
     call("state")
       .then((r) => {
         setConnection(r);
+        if (desktop && r.configured)
+          call("profiles")
+            .then((p) => setProfiles(p.profiles))
+            .catch(() => {});
         if (r.session?.sharing) {
           call("models")
             .then((catalog) => {
               setModels(catalog.models);
               setModel(catalog.models[0]?.slug || "");
             })
-            .catch((e) => setError(e.message));
+            .catch(async (e) => {
+              try {
+                const snapshot = e.connection || (await call("state"));
+                setConnection(snapshot);
+                if (!snapshot.session?.sharing) {
+                  setModels([]);
+                  setModel("");
+                }
+              } catch {}
+              setError(e.message);
+            });
         }
         if (r.project?.versions) {
           try {
@@ -122,7 +143,28 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.appearance = appearance;
   }, [appearance]);
-  const update = (patch) => setProject((p) => ({ ...p, ...patch }));
+  const invalidateGeneration = () => {
+    sequence.current++;
+    call("cancel").catch(() => {});
+  };
+  const update = (patch) => {
+    if (Object.hasOwn(patch, "draft")) draftRevision.current++;
+    if (Object.hasOwn(patch, "selected")) invalidateGeneration();
+    setProject((p) => ({ ...p, ...patch }));
+  };
+  async function refreshAccounts() {
+    const r = await call("state");
+    setConnection(r);
+    setModels([]);
+    setModel("");
+    if (desktop && r.configured) setProfiles((await call("profiles")).profiles);
+    if (r.session?.sharing) {
+      const catalog = await call("models");
+      setModels(catalog.models);
+      setModel(catalog.models[0]?.slug || "");
+    }
+    return r;
+  }
   const closeMenu = () => {
     setMenu(false);
     menuButton.current?.focus();
@@ -158,6 +200,14 @@ function App() {
     try {
       await fn();
     } catch (e) {
+      try {
+        const snapshot = e.connection || (await call("state"));
+        setConnection(snapshot);
+        if (!snapshot.session?.sharing) {
+          setModels([]);
+          setModel("");
+        }
+      } catch {}
       setError(e.message);
     } finally {
       setBusy("");
@@ -166,7 +216,14 @@ function App() {
   async function connect(newProfile = false) {
     sequence.current++;
     await run("Opening ChatGPT…", async () => {
-      const r = await call("connect", { newProfile });
+      const r = await call("connect", {
+        newProfile,
+        profileId: newProfile ? undefined : connection.session?.profileId,
+        reconsent:
+          connection.session?.status === "connected" &&
+          !connection.session?.sharing,
+      });
+      if (desktop) setProfiles((await call("profiles")).profiles);
       setConnection(r);
       if (r.session.sharing) {
         const catalog = await call("models");
@@ -186,7 +243,8 @@ function App() {
     closeMenu();
     setModal(type);
   }
-  function accept(design, source, parent = null) {
+  function accept(design, source, parent = null, submittedRevision = null) {
+    if (source === "sample") invalidateGeneration();
     setError("");
     const id = crypto.randomUUID();
     const version = {
@@ -213,7 +271,10 @@ function App() {
       ...p,
       versions: [...p.versions, version].slice(-20),
       selected: id,
-      draft: "",
+      draft:
+        source === "sample" || submittedRevision === draftRevision.current
+          ? ""
+          : p.draft,
     }));
     setMessage(
       source === "sample"
@@ -223,6 +284,7 @@ function App() {
   }
   async function generate() {
     const operation = ++sequence.current;
+    const submittedRevision = draftRevision.current;
     await run("Generating designs…", async () => {
       const r = await call("generate", {
         prompt: project.draft,
@@ -245,7 +307,7 @@ function App() {
         };
       } // No executable model output is accepted.
       for (let i = 0; i < 5; i++) screenHTML(d, i);
-      accept(d, "chatgpt", selected?.manifest.id || null);
+      accept(d, "chatgpt", selected?.manifest.id || null, submittedRevision);
     });
   }
   async function exportCurrent() {
@@ -444,7 +506,8 @@ function App() {
                   role="menuitem"
                   onClick={() => {
                     closeMenu();
-                    connect(true);
+                    openModal("accounts");
+                    refreshAccounts().catch((e) => setError(e.message));
                   }}
                 >
                   Switch account
@@ -525,6 +588,13 @@ function App() {
                 <h1>{selected ? project.name : "Start designing your app"}</h1>
               </div>
               <div className="connection-pill">
+                {connection.session?.identity?.email && (
+                  <span>
+                    {connection.session.identity.name || "ChatGPT account"} ·{" "}
+                    {connection.session.identity.email} ·{" "}
+                    {connection.session.profileId?.slice(0, 8)}
+                  </span>
+                )}
                 {connection.session?.sharing
                   ? "Using ChatGPT plan"
                   : "Local prototype · not connected"}
@@ -657,18 +727,55 @@ function App() {
       </footer>
       <dialog
         ref={dialog}
+        aria-labelledby="studio-dialog-title"
         onCancel={(e) => {
           e.preventDefault();
           setModal(null);
         }}
       >
         <div className="dialog-head">
-          <h2>{modal === "rename" ? "Rename project" : "Design preview"}</h2>
+          <h2 id="studio-dialog-title">
+            {modal === "rename"
+              ? "Rename project"
+              : modal === "accounts"
+                ? "ChatGPT accounts"
+                : "Design preview"}
+          </h2>
           <button aria-label="Close dialog" onClick={() => setModal(null)}>
             ✕
           </button>
         </div>
-        {modal === "rename" ? (
+        {modal === "accounts" ? (
+          <div>
+            {profiles.map((p) => (
+              <button
+                key={p.id}
+                disabled={!!busy}
+                onClick={() => {
+                  invalidateGeneration();
+                  run("Selecting account…", async () => {
+                    await call("selectProfile", { id: p.id });
+                    await refreshAccounts();
+                    setModal(null);
+                  });
+                }}
+              >
+                {p.identity.email || p.identity.name || p.label} ·{" "}
+                {p.id.slice(0, 8)} · {p.status}
+                {p.id === connection.session?.profileId ? " · active" : ""}
+              </button>
+            ))}
+            <button
+              disabled={!!busy}
+              onClick={() => {
+                setModal(null);
+                connect(true);
+              }}
+            >
+              Add account
+            </button>
+          </div>
+        ) : modal === "rename" ? (
           <form
             onSubmit={(e) => {
               e.preventDefault();

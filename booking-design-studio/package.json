@@ -8,7 +8,8 @@
     "build": "node build.mjs",
     "start": "electron .",
     "personal": "node launch-personal.mjs",
-    "preview": "node preview-server.mjs"
+    "preview": "node preview-server.mjs",
+    "test": "node tests/protocol.mjs && node tests/ui-export.mjs && node tests/recovery.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",
@@ -17,6 +18,7 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "electron": "44.5.1",
     "esbuild": "0.28.2"
   }
