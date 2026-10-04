@@ -117,6 +117,10 @@ export function validateDesign(data) {
         throw Error("Invalid screen copy.");
       result[key] = screen[key];
     }
+    const padding = screen.actionPadding ?? 17;
+    if (!Number.isInteger(padding) || padding < 12 || padding > 28)
+      throw Error("Invalid button padding");
+    result.actionPadding = padding;
     return result;
   });
   return { style: data.style, tokens, screens: normalized };
@@ -129,7 +133,7 @@ const escape = (s) =>
         c
       ],
   );
-export function screenHTML(design, index) {
+export function screenHTML(design, index, selectedElement = null) {
   const d = validateDesign(design),
     t = d.tokens,
     s = d.screens[index];
@@ -151,5 +155,5 @@ export function screenHTML(design, index) {
       '<div class="tick">✓</div><h2>Demo Relaxation</h2><p>PREVIEW ONLY</p><p>60 min · MKD 1,400</p>',
     ),
   ][index];
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'"><style>*{box-sizing:border-box}body{margin:0;padding:22px;background:${t.paper};color:${t.ink};font:15px system-ui;min-height:100vh}header{font-weight:700;letter-spacing:2px;font-size:12px;padding:5px 0 32px}small{color:${t.muted};font-size:10px;letter-spacing:1px}h1,h2{font-family:${t.heading};font-weight:500}h1{font-size:29px;line-height:1.15}h2{font-size:21px}p{color:${t.muted};line-height:1.55}.card{padding:20px;border:1px solid ${t.line};border-radius:${t.radius};background:${t.soft};margin:24px 0}.action{padding:17px;text-align:center;background:${t.accent};color:white;border-radius:${t.radius};margin:24px 0;font-weight:600}.slots{display:grid;grid-template-columns:1fr 1fr;gap:10px}.slots span,.field{padding:13px;background:${t.paper};border:1px solid ${t.line};border-radius:10px}.field{margin:8px 0 18px}label{font-size:12px}.tick{font-size:42px}footer{font-size:11px;color:${t.muted};padding-top:18px}</style></head><body><header>KINDRED</header><small>STEP ${index + 1} OF 5</small><h1>${escape(s.title)}</h1><p>${escape(s.subtitle)}</p>${content}<div class="action">${escape(s.action)}</div><footer>Fictional design · synthetic details</footer></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'"><style>*{box-sizing:border-box}body{margin:0;padding:22px;background:${t.paper};color:${t.ink};font:15px system-ui;min-height:100vh}header{font-weight:700;letter-spacing:2px;font-size:12px;padding:5px 0 32px}small{color:${t.muted};font-size:10px;letter-spacing:1px}h1,h2{font-family:${t.heading};font-weight:500}h1{font-size:29px;line-height:1.15}h2{font-size:21px}p{color:${t.muted};line-height:1.55}.card{padding:20px;border:1px solid ${t.line};border-radius:${t.radius};background:${t.soft};margin:24px 0}.action{padding:${s.actionPadding}px;text-align:center;background:${t.accent};color:white;border-radius:${t.radius};margin:24px 0;font-weight:600}.slots{display:grid;grid-template-columns:1fr 1fr;gap:10px}.slots span,.field{padding:13px;background:${t.paper};border:1px solid ${t.line};border-radius:10px}.field{margin:8px 0 18px}label{font-size:12px}.tick{font-size:42px}footer{font-size:11px;color:${t.muted};padding-top:18px}${selectedElement === "action" ? ".action" : selectedElement === "title" ? "h1" : selectedElement === "subtitle" ? ".screen-subtitle" : ".no-selection"}{outline:3px solid #f47b38;outline-offset:4px}</style></head><body><header>KINDRED</header><small>STEP ${index + 1} OF 5</small><h1 data-component="screen-${index}-title">${escape(s.title)}</h1><p class="screen-subtitle" data-component="screen-${index}-subtitle">${escape(s.subtitle)}</p>${content}<button type="button" class="action" data-component="screen-${index}-action" style="padding:${s.actionPadding}px">${escape(s.action)}</button><footer>Fictional design · synthetic details</footer></body></html>`;
 }

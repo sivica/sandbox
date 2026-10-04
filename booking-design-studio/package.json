@@ -12,6 +12,7 @@
     "test": "node tests/protocol.mjs && node tests/ui-export.mjs && node tests/recovery.mjs"
   },
   "dependencies": {
+    "@xyflow/react": "12.12.0",
     "fflate": "0.8.3",
     "jose": "6.2.12",
     "react": "18.3.1",

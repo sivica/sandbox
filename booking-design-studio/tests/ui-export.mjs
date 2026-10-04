@@ -14,6 +14,10 @@ const base = await mkdtemp(
 const web = join(base, "web");
 await mkdir(web, { recursive: true });
 await cp(join(root, "public"), web, { recursive: true });
+await cp(
+  join(root, "node_modules/@xyflow/react/dist/style.css"),
+  join(web, "flow.css"),
+);
 await build({
   entryPoints: [join(root, "src/app.jsx")],
   outfile: join(web, "studio.js"),
@@ -126,7 +130,11 @@ await check("proposal HTML escapes untrusted copy", async () => {
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, "http://127.0.0.1");
   let path;
-  if (["/", "/index.html", "/studio.js", "/studio.css"].includes(u.pathname))
+  if (
+    ["/", "/index.html", "/studio.js", "/studio.css", "/flow.css"].includes(
+      u.pathname,
+    )
+  )
     path = join(web, u.pathname === "/" ? "index.html" : u.pathname.slice(1));
   else if (u.pathname.startsWith("/export/") && !u.pathname.includes(".."))
     path = join(exported, "dist", u.pathname.slice(8));
@@ -228,22 +236,28 @@ try {
       .getByRole("button", { name: "Load sample", exact: true })
       .first()
       .click();
+    await page
+      .getByRole("button", { name: "Show screen list", exact: true })
+      .click();
   }
   await check(
     "new draft survives completion of earlier generation",
     async () => {
       await workspace();
-      await page.getByRole("textbox").fill("First synthetic refinement");
+      await page.locator("textarea").fill("First synthetic refinement");
       await page.getByRole("button", { name: "Apply changes" }).click();
       await page.waitForFunction(() => !!window.reviewComplete);
-      await page.getByRole("textbox").fill("KEEP THIS NEWER DRAFT");
+      await page.locator("textarea").fill("KEEP THIS NEWER DRAFT");
       await page.evaluate(() => window.reviewComplete());
       await page
         .getByRole("status")
         .filter({ hasText: "Generation completed" })
         .waitFor();
+      await page
+        .getByRole("button", { name: "Accept design", exact: true })
+        .click();
       assert.equal(
-        await page.getByRole("textbox").inputValue(),
+        await page.locator("textarea").inputValue(),
         "KEEP THIS NEWER DRAFT",
       );
     },
@@ -252,7 +266,7 @@ try {
     "newly loaded sample is not overwritten by stale generation",
     async () => {
       await workspace();
-      await page.getByRole("textbox").fill("Pending synthetic refinement");
+      await page.locator("textarea").fill("Pending synthetic refinement");
       await page.getByRole("button", { name: "Apply changes" }).click();
       await page.waitForFunction(() => !!window.reviewComplete);
       await page
@@ -343,6 +357,62 @@ try {
         await page.screenshot({ path: join(base, "studio-" + width + ".png") });
       },
     );
+  await check("canvas selection, direct edit, undo and redo", async () => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await workspace();
+    await page
+      .getByRole("button", { name: "Show canvas", exact: true })
+      .click();
+    assert.equal(await page.locator(".react-flow__node").count(), 5);
+    await page
+      .getByRole("button", {
+        name: "Select Date and slots button",
+        exact: true,
+      })
+      .first()
+      .click();
+    await page.getByLabel("Selected element text").fill("Book my calm moment");
+    await page.getByLabel("Button padding").fill("28");
+    await page
+      .getByRole("button", { name: "Save direct edit", exact: true })
+      .click();
+    await page.waitForFunction(
+      () => window.reviewSaved.versions.at(-1).manifest.source === "manual",
+    );
+    assert.equal(
+      await page.getByLabel("Selected element text").inputValue(),
+      "Book my calm moment",
+    );
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    assert.notEqual(
+      await page.getByLabel("Selected element text").inputValue(),
+      "Book my calm moment",
+    );
+    await page.getByRole("button", { name: "Redo", exact: true }).click();
+    assert.equal(
+      await page.getByLabel("Selected element text").inputValue(),
+      "Book my calm moment",
+    );
+    await page
+      .getByRole("button", { name: "Interactive preview", exact: true })
+      .click();
+    const preview = page.frameLocator("iframe.large-preview");
+    await preview
+      .getByRole("button", { name: "Explore treatment", exact: true })
+      .click();
+    await preview
+      .getByRole("button", { name: "Choose a time", exact: true })
+      .click();
+    await preview.getByRole("button", { name: "14:15", exact: true }).click();
+    await preview
+      .getByRole("button", { name: "Book my calm moment", exact: true })
+      .click();
+    await preview
+      .getByRole("button", { name: "Confirm booking", exact: true })
+      .click();
+    await preview.getByRole("status").filter({ hasText: "14:15" }).waitFor();
+    await page.getByRole("button", { name: "Close dialog" }).click();
+  });
   const exportServer = http.createServer(async (req, res) => {
     const path = new URL(req.url, "http://127.0.0.1").pathname;
     const allowed = [
@@ -353,6 +423,7 @@ try {
       "/design.css",
       "/assets/kindred-mark.svg",
       "/designs/screen-1.html",
+      "/interactive-design.html",
     ];
     if (!allowed.includes(path)) {
       res.writeHead(404);
@@ -418,6 +489,47 @@ try {
         sampleDesign.screens[0].title,
       );
     });
+    await check(
+      "exported interactive design completes synthetic booking",
+      async () => {
+        await exportPage.goto(exportOrigin + "/interactive-design.html");
+        assert.equal(
+          await exportPage.locator("h1").innerText(),
+          sampleDesign.screens[0].title,
+        );
+        await exportPage
+          .getByRole("button", {
+            name: sampleDesign.screens[0].action,
+            exact: true,
+          })
+          .click();
+        await exportPage
+          .getByRole("button", {
+            name: sampleDesign.screens[1].action,
+            exact: true,
+          })
+          .click();
+        await exportPage
+          .getByRole("button", { name: "14:15", exact: true })
+          .click();
+        await exportPage
+          .getByRole("button", {
+            name: sampleDesign.screens[2].action,
+            exact: true,
+          })
+          .click();
+        await exportPage
+          .getByRole("button", {
+            name: sampleDesign.screens[3].action,
+            exact: true,
+          })
+          .click();
+        await exportPage
+          .getByRole("status")
+          .filter({ hasText: "14:15" })
+          .waitFor();
+      },
+    );
   } finally {
     await exportContext.close();
     await new Promise((r) => exportServer.close(r));

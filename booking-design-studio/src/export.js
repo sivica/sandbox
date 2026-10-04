@@ -1,3 +1,4 @@
+import { bookingHTML } from "./interactive.js";
 import { zipSync, strToU8 } from "fflate";
 import template from "../export-baseline.json";
 import { validateDesign, screenHTML, screens } from "./design.js";
@@ -21,8 +22,9 @@ export function exportZip(version) {
     (_, i) =>
       (files[`public/designs/screen-${i + 1}.html`] = screenHTML(design, i)),
   );
+  files["public/interactive-design.html"] = bookingHTML(design);
   files["README.md"] +=
-    "\n\n## Design Studio version\nThis ZIP uses the trusted Kindred booking controller and synthetic fixtures. Generated design tokens are applied to the selected style. Static design proposals are in public/designs; their copy is not automatically wired into the trusted booking controller. See design-specification.json and version-manifest.json. Review integration before real use. No ChatGPT credentials are included.\n\nRun npm ci, npm run build, npm start. Screens: " +
+    "\n\n## Design Studio version\nThis ZIP uses the trusted Kindred booking controller and synthetic fixtures. Generated design tokens are applied to the selected style. Static proposals are in public/designs; interactive-design.html renders the exact accepted design through a trusted synthetic walkthrough. No reservation is created. The separate booking-controller baseline requires integration review. See design-specification.json and version-manifest.json. Review integration before real use. No ChatGPT credentials are included.\n\nRun npm ci, npm run build, npm start. Screens: " +
     screens.join(", ") +
     ".\n";
   return zipSync(

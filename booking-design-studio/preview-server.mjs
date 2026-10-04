@@ -2,7 +2,7 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
 const root = resolve("dist");
-const paths = new Set(["/", "/index.html", "/studio.js", "/studio.css"]);
+const paths = new Set(["/", "/index.html", "/studio.js", "/studio.css", "/flow.css"]);
 http
   .createServer(async (req, res) => {
     const path = new URL(req.url, "http://localhost").pathname;

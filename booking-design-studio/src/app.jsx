@@ -8,6 +8,8 @@ import {
   validateDesign,
   screenHTML,
 } from "./design.js";
+import { DesignCanvas } from "./canvas.jsx";
+import { bookingHTML } from "./interactive.js";
 import { exportZip } from "./export.js";
 const desktop = !!window.kindred;
 const key = "kindred-studio-project-v1";
@@ -79,7 +81,10 @@ function App() {
     [scope, setScope] = useState("All screens"),
     [reference, setReference] = useState(null),
     [screen, setScreen] = useState(0),
-    [previewSize, setPreviewSize] = useState("mobile");
+    [previewSize, setPreviewSize] = useState("mobile"),
+    [view, setView] = useState("canvas"),
+    [element, setElement] = useState("action"),
+    [proposal, setProposal] = useState(null);
   const menuButton = useRef(),
     menuRoot = useRef(),
     dialog = useRef(),
@@ -145,6 +150,7 @@ function App() {
   }, [appearance]);
   const invalidateGeneration = () => {
     sequence.current++;
+    setProposal(null);
     call("cancel").catch(() => {});
   };
   const update = (patch) => {
@@ -254,11 +260,13 @@ function App() {
         parent,
         scope,
         source,
-        validation: "schema and trusted static renderer; no acceptance tests",
+        validation: "validated schema and trusted preview templates",
+        component: element,
         sourceBaseline: "6038e4faceb4427af8f1256a691934431af908d0",
         createdAt: new Date().toISOString(),
         validatedFiles: [
           "design-specification.json",
+          "public/interactive-design.html",
           "public/designs/screen-1.html",
           "public/designs/screen-2.html",
           "public/designs/screen-3.html",
@@ -279,7 +287,9 @@ function App() {
     setMessage(
       source === "sample"
         ? "Loaded an authored sample. No AI request was made."
-        : "Generation completed and specification validated.",
+        : source === "manual"
+          ? "Saved direct edit as a new version. No AI request was made."
+          : "Generation completed and specification validated.",
     );
   }
   async function generate() {
@@ -291,6 +301,7 @@ function App() {
         style: project.style,
         scope,
         previous: selected?.design,
+        component: scope === "All screens" ? null : element,
         model,
       });
       if (operation !== sequence.current) return;
@@ -302,12 +313,28 @@ function App() {
         d = {
           ...selected.design,
           screens: selected.design.screens.map((s, n) =>
-            n === i ? d.screens[n] : s,
+            n === i
+              ? {
+                  ...s,
+                  [element]: d.screens[n][element],
+                  ...(element === "action"
+                    ? { actionPadding: d.screens[n].actionPadding }
+                    : {}),
+                }
+              : s,
           ),
         };
       } // No executable model output is accepted.
       for (let i = 0; i < 5; i++) screenHTML(d, i);
-      accept(d, "chatgpt", selected?.manifest.id || null, submittedRevision);
+      setProposal({
+        design: d,
+        parent: selected?.manifest.id || null,
+        submittedRevision,
+        operation,
+      });
+      setMessage(
+        "Generation completed and specification validated. Review and accept the proposed design.",
+      );
     });
   }
   async function exportCurrent() {
@@ -317,7 +344,7 @@ function App() {
       setMessage(
         r.path
           ? "Export saved: " + r.path
-          : "ZIP downloaded. Static proposals and runnable baseline are documented separately.",
+          : "ZIP downloaded. The accepted interactive design and separate booking baseline are included.",
       );
     });
   }
@@ -394,7 +421,13 @@ function App() {
         {selected && (
           <label className="compact">
             Change scope
-            <select value={scope} onChange={(e) => setScope(e.target.value)}>
+            <select
+              value={scope}
+              onChange={(e) => {
+                invalidateGeneration();
+                setScope(e.target.value);
+              }}
+            >
               {["All screens", ...screens].map((s) => (
                 <option key={s}>{s}</option>
               ))}
@@ -403,7 +436,13 @@ function App() {
         )}
         <button
           className="primary generate"
-          disabled={!usable || !project.draft.trim() || !!busy || !!reference}
+          disabled={
+            !usable ||
+            !project.draft.trim() ||
+            !!busy ||
+            !!reference ||
+            !!proposal
+          }
           onClick={generate}
         >
           {selected ? "Apply changes" : "Generate designs"} ↗
@@ -628,7 +667,9 @@ function App() {
                   <p>
                     {selected.manifest.source === "sample"
                       ? "Authored sample · no AI generation"
-                      : "ChatGPT design specification"}{" "}
+                      : selected.manifest.source === "manual"
+                        ? "Direct edit · no AI generation"
+                        : "ChatGPT design specification"}{" "}
                     · five screens
                   </p>
                   <label className="compact">
@@ -645,26 +686,197 @@ function App() {
                     </select>
                   </label>
                 </div>
-                <div className="gallery">
-                  {screens.map((label, i) => (
-                    <button
-                      className="design-card"
-                      aria-label={"Preview " + label}
-                      key={label}
-                      onClick={(e) => openModal("preview", e, i)}
-                    >
-                      <span>{label}</span>
-                      <iframe
-                        sandbox=""
-                        tabIndex={-1}
-                        title={label + " design"}
-                        srcDoc={screenHTML(selected.design, i)}
+                <div className="canvas-toolbar">
+                  <button
+                    onClick={() =>
+                      setView(view === "canvas" ? "list" : "canvas")
+                    }
+                  >
+                    {view === "canvas" ? "Show screen list" : "Show canvas"}
+                  </button>
+                  <button
+                    disabled={
+                      project.versions.findIndex(
+                        (v) => v.manifest.id === project.selected,
+                      ) <= 0
+                    }
+                    onClick={() =>
+                      update({
+                        selected:
+                          project.versions[
+                            project.versions.findIndex(
+                              (v) => v.manifest.id === project.selected,
+                            ) - 1
+                          ].manifest.id,
+                      })
+                    }
+                  >
+                    Undo
+                  </button>
+                  <button
+                    disabled={
+                      project.versions.findIndex(
+                        (v) => v.manifest.id === project.selected,
+                      ) >=
+                      project.versions.length - 1
+                    }
+                    onClick={() =>
+                      update({
+                        selected:
+                          project.versions[
+                            project.versions.findIndex(
+                              (v) => v.manifest.id === project.selected,
+                            ) + 1
+                          ].manifest.id,
+                      })
+                    }
+                  >
+                    Redo
+                  </button>
+                  <button onClick={(e) => openModal("preview", e, 0)}>
+                    Interactive preview
+                  </button>
+                </div>
+                {view === "canvas" && (
+                  <DesignCanvas
+                    version={selected}
+                    layout={project.layout || {}}
+                    selectedScreen={screen}
+                    element={element}
+                    onLayout={(layout) => update({ layout })}
+                    onSelect={(i, key) => {
+                      invalidateGeneration();
+                      setScreen(i);
+                      setElement(key);
+                      setScope(screens[i]);
+                    }}
+                  />
+                )}
+                <section
+                  className="element-editor"
+                  aria-label="Selected element editor"
+                >
+                  <h2>
+                    Edit {screens[screen]} · {element}
+                  </h2>
+                  <form
+                    key={selected.manifest.id + screen + element}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      invalidateGeneration();
+                      const f = new FormData(e.currentTarget),
+                        d = structuredClone(selected.design);
+                      d.screens[screen][element] = String(f.get("copy"));
+                      d.screens[screen].actionPadding = Number(
+                        f.get("padding"),
+                      );
+                      if (scope === "All screens")
+                        d.tokens.accent = String(f.get("accent"));
+                      accept(validateDesign(d), "manual", selected.manifest.id);
+                    }}
+                  >
+                    <label>
+                      Selected element text
+                      <input
+                        name="copy"
+                        defaultValue={selected.design.screens[screen][element]}
+                        maxLength={180}
+                        required
                       />
-                      <span className="card-action">Open preview ↗</span>
-                    </button>
+                    </label>
+                    <label>
+                      Button padding
+                      <input
+                        name="padding"
+                        type="number"
+                        min="12"
+                        max="28"
+                        defaultValue={
+                          selected.design.screens[screen].actionPadding || 17
+                        }
+                      />
+                    </label>
+                    <label>
+                      Shared accent (All screens scope)
+                      <input
+                        name="accent"
+                        type="color"
+                        disabled={scope !== "All screens"}
+                        defaultValue={selected.design.tokens.accent}
+                      />
+                    </label>
+                    <button disabled={!!busy}>Save direct edit</button>
+                  </form>
+                </section>
+                <div
+                  className={
+                    view === "canvas" ? "gallery mobile-screen-list" : "gallery"
+                  }
+                >
+                  {screens.map((label, i) => (
+                    <div className="screen-list-item" key={label}>
+                      <button
+                        className="design-card"
+                        aria-label={"Preview " + label}
+                        onClick={(e) => openModal("preview", e, i)}
+                      >
+                        <span>{label}</span>
+                        <iframe
+                          sandbox=""
+                          tabIndex={-1}
+                          title={label + " design"}
+                          srcDoc={screenHTML(selected.design, i)}
+                        />
+                        <span className="card-action">Open preview ↗</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          invalidateGeneration();
+                          setScreen(i);
+                          setElement("action");
+                          setScope(screens[i]);
+                        }}
+                      >
+                        Select {label} button
+                      </button>
+                    </div>
                   ))}
                 </div>
               </>
+            )}
+            {proposal && (
+              <section className="proposal" aria-label="Proposed design">
+                <h2>Review proposed design</h2>
+                <p>
+                  Scope: {scope} · accept creates a new version. Your current
+                  design stays available.
+                </p>
+                <iframe
+                  sandbox=""
+                  title="Proposed design preview"
+                  srcDoc={screenHTML(proposal.design, screen)}
+                />
+                <button
+                  onClick={() => {
+                    if (proposal.operation !== sequence.current) {
+                      setProposal(null);
+                      return;
+                    }
+                    accept(
+                      proposal.design,
+                      "chatgpt",
+                      proposal.parent,
+                      proposal.submittedRevision,
+                    );
+                    setProposal(null);
+                  }}
+                >
+                  Accept design
+                </button>
+                <button onClick={() => setProposal(null)}>
+                  Discard proposal
+                </button>
+              </section>
             )}
             {composer}
             <section className="inspiration">
@@ -824,13 +1036,14 @@ function App() {
                 </label>
               </div>
               <p className="fine">
-                Static proposal · booking actions are in the runnable export.
+                Interactive synthetic walkthrough · no real reservation or
+                calendar access.
               </p>
               <iframe
                 className={"large-preview " + previewSize}
-                sandbox=""
+                sandbox="allow-scripts"
                 title={screens[screen] + " enlarged design"}
-                srcDoc={screenHTML(selected.design, screen)}
+                srcDoc={bookingHTML(selected.design, screen)}
               />
             </>
           )

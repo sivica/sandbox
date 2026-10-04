@@ -16,6 +16,7 @@ const server = http.createServer(async (req, res) => {
     "/index.html": "index.html",
     "/studio.js": "studio.js",
     "/studio.css": "studio.css",
+    "/flow.css": "flow.css",
   }[path];
   if (!file) {
     res.writeHead(404);
@@ -88,7 +89,10 @@ try {
     .getByRole("button", { name: "Load sample", exact: true })
     .first()
     .click();
-  const frameHandle = await page.locator("iframe").first().elementHandle();
+  const frameHandle = await page
+    .locator(".gallery iframe")
+    .first()
+    .elementHandle();
   const frame = await frameHandle.contentFrame();
   await frame.locator("h1").waitFor();
   for (const width of [320, 390]) {
@@ -99,7 +103,7 @@ try {
     });
   }
   await page
-    .getByRole("textbox")
+    .locator("textarea")
     .fill("Synthetic refinement that encounters an expired session");
   await page.getByRole("button", { name: "Apply changes" }).click();
   await page

@@ -32,3 +32,10 @@ No production deployment or monitoring restart. The existing booking backend rem
 - Dedicated studio CI covers build plus synthetic protocol, browser, recovery and export checks; PR scope updated.
 
 Verification: build passed; 18 protocol checks, 13 browser/export checks and one terminal-session recovery check passed (32 total). All identity/model responses are synthetic; encryption tests use a fake implementation. Actual macOS keychain, account access, inference, renewal/revocation, physical devices and screen-reader listening remain unverified. The existing video remains an authored-sample prototype.
+
+## Canvas phase implemented
+- Five screen nodes with pan/zoom, selection highlights, persistent positions and mobile list fallback.
+- Select heading/subtitle/button; direct copy/padding edits; shared accent constrained to All screens scope.
+- Immutable accepted versions, undo/redo and explicit accept/discard of AI proposals.
+- Interactive synthetic booking walkthrough and export of the same accepted design; separate baseline retained.
+- Build and 34 synthetic checks passed. Fresh sign-in reached final plan-access consent, awaiting the required user confirmation. No actual AI generation or new connected-demo footage is claimed.

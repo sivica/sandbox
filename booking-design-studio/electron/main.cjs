@@ -222,7 +222,7 @@ app.whenReady().then(async () => {
         active = new AbortController();
         const controller = active;
         const instructions =
-          "Return ONLY a JSON design specification, not executable code. Schema: {style: one of calm-spa/clean-clinic/modern-boutique, tokens:{ink,muted,paper,line,accent,soft,canvas: six-digit hex colours, radius,space: px from 0 to 40, heading: Georgia, serif OR system-ui, sans-serif},screens: exactly five objects {title,subtitle,action}, ordered service selection, treatment details, date/slots, contact, confirmation}. Strings max 180 chars. Preserve booking rules, APIs, prices and fictional data. No URLs or scripts. Preserve screen-local refinement scope; shared token changes require All screens.";
+          "Return ONLY a JSON design specification, not executable code. Schema: {style: one of calm-spa/clean-clinic/modern-boutique, tokens:{ink,muted,paper,line,accent,soft,canvas: six-digit hex colours, radius,space: px from 0 to 40, heading: Georgia, serif OR system-ui, sans-serif},screens: exactly five objects {title,subtitle,action,actionPadding: integer 12 to 28}, ordered service selection, treatment details, date/slots, contact, confirmation}. Strings max 180 chars. Preserve booking rules, APIs, prices and fictional data. No URLs or scripts. Preserve screen-local refinement scope; shared token changes require All screens.";
         try {
           const previous = payload.previous
             ? JSON.stringify(payload.previous).slice(0, 20000)
@@ -237,6 +237,7 @@ app.whenReady().then(async () => {
                   brief: payload.prompt,
                   style: payload.style,
                   scope: payload.scope,
+                  component: payload.component,
                   previous,
                 }),
               },
