@@ -414,7 +414,7 @@ await check(
   "revocation failure clears local credentials and reports uncertainty",
   async () => {
     calls.length = 0;
-  const { provider } = await setup({ seed: true, revokeFailure: true });
+    const { provider } = await setup({ seed: true, revokeFailure: true });
     await assert.rejects(
       provider.disconnect(),
       /remote revocation was not confirmed/,

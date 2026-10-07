@@ -61,7 +61,7 @@ The five screens can be arranged on a React Flow canvas, with pan/zoom and a scr
 
 AI results are proposals: review, Accept design or Discard proposal. The previous accepted version remains usable. A sandboxed interactive preview uses fixed trusted code and fictional treatment/contact/slot data; it creates no reservation and makes no network requests. Export includes `public/interactive-design.html`, generated from the same validated design, alongside the separate trusted booking-controller baseline. Its standalone design preview needs no account connection. It is a synthetic walkthrough, not a new production booking integration.
 
-Build and all 39 automated checks passed (18 protocol, 19 browser/export, one recovery, one recorder). A continuous real app recording now shows actual subscription generation, refinement, interactive preview and export. Authored-sample and earlier still-capture videos remain historical artifacts.
+Build and all 49 automated checks passed (21 protocol, 24 browser/export, one recovery, three recorder). A continuous real app recording now shows actual subscription generation, refinement, interactive preview and export. Authored-sample and earlier still-capture videos remain historical artifacts.
 
 ## Record a demo
 Click **Record demo** in the personal Electron workspace. It hides the account identity and captures only this app window at two frames per second, for up to five minutes. Click **Stop demo recording** to write an owner-only recording manifest and numbered JPEG frames under the personal app recordings folder. No microphone, desktop or other apps are captured. Final video encoding is a separate local step. Do not open account-management dialogs or put sensitive content in the project while recording.
