@@ -1,41 +1,25 @@
 # Studio status
 
 ## Done
-- Three planned screens implemented as a local visual prototype.
-- Authored samples, five-screen gallery above refinement input, project menu, appearance/style separation.
-- Local persisted projects/versions and ZIP export of the trusted booking baseline plus proposal files.
-- Electron main/renderer boundary, no privileged preview bridge, no generated executable code.
-- Build completed successfully; browser opened and sample gallery/menu rendered.
-
-## Personal mode implemented
-- Original ChatGPT subscription connector, official browser OAuth with PKCE/state/nonce and verified identity.
-- Encrypted credentials, separate personal storage, account model discovery, renewable-token rotation and completed-response-only generation.
-- Run `npm ci`, `npm run build`, then `npm run personal`.
-- Build passed; application launched. Mac locked: real account sign-in and inference remain unverified.
+- Local personal app: ChatGPT sign-in, prompt composer, five-screen canvas, scoped element selection, direct edits, accepted versions, undo/redo and mobile list fallback.
+- Real account authorization, model discovery, completed generation and completed refinement verified on this Mac. The encrypted connection resumed after restart.
+- Initial generation rejected an invalid radius; the model instructions now include explicit valid JSON and token examples. A retry succeeded. Human review caught invented fictional dates and guest names; a real refinement corrected them.
+- Accepted version 14ed08bc-0d08-4186-9f36-c3aeb1a4b74b has matching synthetic preview/export and action padding 24px.
+- Native interactive walkthrough completed all five screens, selecting 14:15. No reservation was created.
+- ZIP verified: five screens, matching interactive HTML, design specification and source=chatgpt version manifest; no credentials.
+- Build and all 34 synthetic checks passed again. These checks simulate account lifecycle responses.
+- A 50-second edited still-capture walkthrough and the accepted ZIP are saved in the shared Google Drive folder. Account identity is masked in the delivered video.
 
 ## Left
-- Complete personal ChatGPT sign-in and grant plan access after unlocking the Mac. Commercial distribution eligibility remains separate.
-- Verify the implemented subscription authorization, inference, renewal, revocation and limit recovery with a real account.
-- Model-supported reference-image submission (currently local preview/removal only).
-- Full interactive proposal preview and automatic screen-copy integration (current previews are static; runnable booking baseline is included in exports).
-- Browser/mobile, export clean-install, security and screen-reader acceptance checks; not run this phase.
-- Actual connected generation/refinement/export demo footage; no fictional generation claims.
+- Continuous Shopify/Sleek-style recording showing live generation/refinement. QuickTime's screen-recording option was disabled and the system capture UI timed out. The delivered video explicitly identifies itself as an edited screen-capture walkthrough; generation and consent are not depicted.
+- Verify real account renewal, revocation and usage-limit recovery. Current connection is retained.
+- Reference-image generation (attachments currently support local preview/removal only).
+- Independent human accessibility/physical-device acceptance and commercial distribution eligibility, if those become goals.
 
-No production deployment or monitoring restart. The existing booking backend remains unchanged.
+## Scope
+Personal local-only tool using the authorized ChatGPT allowance. Preview uses fixed trusted templates and fictional data; no arbitrary generated code runs. The separate booking-controller baseline still needs integration review before real use. No production deployment, real bookings or monitoring restart.
 
-## Review corrections completed
-- Malformed, Unicode, duplicate and oversized callback state is rejected before constant-time comparison; parsing failures are contained.
-- Pending results preserve newer drafts and cannot replace a newly selected version/sample.
-- Failed operations return safe session state; invalid credentials clear stale models and expose reconnect.
-- Active account identity and registration are visible; saved account selection is distinct from Add account. Routine sign-in does not force consent.
-- Preview, rename and account dialogs have accessible names.
-- Dedicated studio CI covers build plus synthetic protocol, browser, recovery and export checks; PR scope updated.
-
-Verification: build passed; 18 protocol checks, 13 browser/export checks and one terminal-session recovery check passed (32 total). All identity/model responses are synthetic; encryption tests use a fake implementation. Actual macOS keychain, account access, inference, renewal/revocation, physical devices and screen-reader listening remain unverified. The existing video remains an authored-sample prototype.
-
-## Canvas phase implemented
-- Five screen nodes with pan/zoom, selection highlights, persistent positions and mobile list fallback.
-- Select heading/subtitle/button; direct copy/padding edits; shared accent constrained to All screens scope.
-- Immutable accepted versions, undo/redo and explicit accept/discard of AI proposals.
-- Interactive synthetic booking walkthrough and export of the same accepted design; separate baseline retained.
-- Build and 34 synthetic checks passed. Fresh sign-in reached final plan-access consent, awaiting the required user confirmation. No actual AI generation or new connected-demo footage is claimed.
+## Deliverables
+- Video: https://drive.google.com/file/d/1ZF3po12Mubw9oqGgyzJoHfq-9AuPeN9C/view
+- Accepted design: https://drive.google.com/file/d/1k6Ctrv_WA9ZGTYUVsIqAV78FX3zsA__0/view
+- Details: video/CONNECTED-DEMO.md
