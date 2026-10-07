@@ -69,6 +69,8 @@ function App() {
     }),
     [recording, setRecording] = useState(false),
     [recordingPending, setRecordingPending] = useState(false),
+    [recordingSavePending, setRecordingSavePending] = useState(false),
+    [referencePending, setReferencePending] = useState(false),
     [ready, setReady] = useState(false),
     [connection, setConnection] = useState({ configured: false, session: {} }),
     [models, setModels] = useState([]),
@@ -83,6 +85,7 @@ function App() {
     [scope, setScope] = useState("All screens"),
     [reference, setReference] = useState(null),
     [screen, setScreen] = useState(0),
+    [previewScreen, setPreviewScreen] = useState(0),
     [previewSize, setPreviewSize] = useState("mobile"),
     [view, setView] = useState("canvas"),
     [element, setElement] = useState("action"),
@@ -90,6 +93,8 @@ function App() {
   const menuButton = useRef(),
     menuRoot = useRef(),
     referenceInput = useRef(),
+    referenceRevision = useRef(0),
+    referenceReader = useRef(),
     dialog = useRef(),
     returnFocus = useRef(),
     sequence = useRef(0),
@@ -249,7 +254,7 @@ function App() {
   }
   function openModal(type, event, index = screen) {
     returnFocus.current = event?.currentTarget || menuButton.current;
-    setScreen(index);
+    setPreviewScreen(index);
     closeMenu();
     setModal(type);
   }
@@ -399,25 +404,36 @@ function App() {
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={(e) => {
+              const revision = ++referenceRevision.current;
+              referenceReader.current?.abort();
+              invalidateGeneration();
+              setReference(null);
+              setReferencePending(false);
               const file = e.target.files[0];
               if (!file) return;
-              if (file.size > 4 * 1024 * 1024) {
-                setError("Reference limit: 4 MB.");
-                return;
-              }
+              if (file.size > 4 * 1024 * 1024) { setError("Reference limit: 4 MB."); return; }
+              setReferencePending(true);
               const reader = new FileReader();
+              referenceReader.current = reader;
+              const current = () => revision === referenceRevision.current;
+              const fail = () => { if (current()) { setReferencePending(false); setError("Invalid reference image."); } };
+              reader.onerror = fail;
               reader.onload = () => {
+                if (!current()) return;
                 const img = new Image();
                 img.onload = () => {
-                  const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
-                  const canvas = document.createElement("canvas");
-                  canvas.width = Math.round(img.width * scale);
-                  canvas.height = Math.round(img.height * scale);
-                  canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                  invalidateGeneration();
-                  setReference({ name: file.name, url: canvas.toDataURL("image/jpeg", 0.85) });
+                  if (!current()) return;
+                  try {
+                    const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+                    const canvas = document.createElement("canvas");
+                    canvas.width = Math.max(1, Math.round(img.width * scale));
+                    canvas.height = Math.max(1, Math.round(img.height * scale));
+                    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                    setReference({ name: file.name, url: canvas.toDataURL("image/jpeg", 0.85) });
+                    setReferencePending(false);
+                  } catch { fail(); }
                 };
-                img.onerror = () => setError("Invalid reference image.");
+                img.onerror = fail;
                 img.src = reader.result;
               };
               reader.readAsDataURL(file);
@@ -456,6 +472,7 @@ function App() {
         <button
           className="primary generate"
           disabled={
+            referencePending ||
             !usable ||
             !project.draft.trim() ||
             !!busy ||
@@ -466,15 +483,15 @@ function App() {
           {selected ? "Apply changes" : "Generate designs"} ↗
         </button>
       </div>
-      {reference && (
+      {(reference || referencePending) && (
         <div className="reference">
-          <img alt="Attached design reference" src={reference.url} />
+          <img alt="Attached design reference" src={reference?.url} />
           <span>
-            {reference.name}
+            {reference?.name || "Preparing reference…"}
             <br />
             This reference will be sent to OpenAI with your next request. Use fictional, non-sensitive designs. Images are not saved in the project.
           </span>
-          <button onClick={() => { invalidateGeneration(); setReference(null); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove reference</button>
+          <button onClick={() => { ++referenceRevision.current; referenceReader.current?.abort(); invalidateGeneration(); setReference(null); setReferencePending(false); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove reference</button>
         </div>
       )}
       <small>
@@ -497,15 +514,22 @@ function App() {
               try {
                 if (recording) {
                   const result = await call("stopRecording");
-                  setRecording(false);
-                  setMessage("App-window recording saved: " + result.directory);
+                  setRecording(result.recording === true);
+                  setRecordingSavePending(!!result.saveError);
+                  if (result.saveError) setError(result.saveError + " Frames retained: " + result.directory);
+                  else setMessage("App-window recording saved: " + result.directory);
+                } else if (recordingSavePending) {
+                  const result = await call("retryRecording");
+                  setRecordingSavePending(!!result.saveError);
+                  if (result.saveError) setError(result.saveError + " Frames retained: " + result.directory);
+                  else { setError(""); setMessage("Recording saved: " + result.directory); }
                 } else {
                   setRecording(true);
                   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
                   await call("startRecording");
                 }
               } catch (e) { if (!recording) setRecording(false); setError(e.message); } finally { setRecordingPending(false); }
-            }}>{recording ? "Stop demo recording" : "Record demo"}</button>}
+            }}>{recording ? "Stop demo recording" : recordingSavePending ? "Retry recording save" : "Record demo"}</button>}
             <label className="compact">
               Appearance
               <select
@@ -1053,8 +1077,8 @@ function App() {
                 <label>
                   Screen
                   <select
-                    value={screen}
-                    onChange={(e) => setScreen(Number(e.target.value))}
+                    value={previewScreen}
+                    onChange={(e) => setPreviewScreen(Number(e.target.value))}
                   >
                     {screens.map((s, i) => (
                       <option value={i} key={s}>
@@ -1081,8 +1105,8 @@ function App() {
               <iframe
                 className={"large-preview " + previewSize}
                 sandbox="allow-scripts"
-                title={screens[screen] + " enlarged design"}
-                srcDoc={bookingHTML(selected.design, screen)}
+                title={screens[previewScreen] + " enlarged design"}
+                srcDoc={bookingHTML(selected.design, previewScreen)}
               />
             </>
           )

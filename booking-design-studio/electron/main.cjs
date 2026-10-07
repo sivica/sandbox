@@ -138,6 +138,7 @@ app.whenReady().then(async () => {
       }
       if (action === "startRecording") return recorder.start();
       if (action === "stopRecording") return recorder.stop();
+      if (action === "retryRecording") return recorder.retrySave();
       if (action === "usage") {
         await shell.openExternal("https://chatgpt.com/settings/usage");
         return {};

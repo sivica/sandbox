@@ -10,7 +10,7 @@ Recorded on 7 October 2026. All data in previews and prompts was fictional.
 - The encrypted credential file was not opened or included in any deliverable.
 
 ## Continuous recording
-- Final successful take: 210 frames, 104.388 seconds capture duration, zero capture errors, no cap. Encoded video duration: 105.4 seconds (final frame hold), 1200 × 900, H.264/yuv420p, no audio.
+- Final successful take: 210 frames, 104.388 seconds capture duration, zero capture errors, no cap. Encoded video duration: 105.4 seconds (final frame hold), 1200 × 868, H.264/yuv420p, no audio.
 - Actual generation -> proposed design -> accept -> select booking button -> real refinement -> accept -> interactive five-screen walkthrough -> 14:15 confirmation -> export.
 - Capture at 2 fps, encoded 25 fps. No sequence edits, simulated generation, speed changes or replacement still slides. Pointer/click activity and natural waiting remain.
 - Account identity and renewal metadata were hidden before the first frame and restored only after capture stopped. OAuth pages were outside the captured app window.

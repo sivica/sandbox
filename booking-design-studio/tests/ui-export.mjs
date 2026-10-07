@@ -175,6 +175,11 @@ try {
   page.setDefaultTimeout(7000);
   await page.addInitScript(
     ({ design }) => {
+      const originalRead = FileReader.prototype.readAsDataURL;
+      FileReader.prototype.readAsDataURL = function(file) {
+        if (file.name === "late.png") window.finishLateImage = () => originalRead.call(this, file);
+        else originalRead.call(this, file);
+      };
       window.reviewCalls = [];
       window.reviewSaved = null;
       window.kindred = {
@@ -217,7 +222,8 @@ try {
             return {};
           }
           if (action === "startRecording") return { recording: true };
-          if (action === "stopRecording") return { directory: "/synthetic/recording" };
+          if (action === "stopRecording") return window.failRecordingSave ? { recording: false, directory: "/synthetic/recording", saveError: "Manifest save failed" } : { recording: false, directory: "/synthetic/recording" };
+          if (action === "retryRecording") return { recording: false, directory: "/synthetic/recording" };
           if (action === "generate") {
             window.reviewPayload = payload;
             if (window.reviewLimit) return { error: "ChatGPT usage limit reached. Try again after reset." };
@@ -506,6 +512,66 @@ try {
       await page.getByRole("button", { name: "Close dialog", exact: true }).click();
       assert.equal(await page.locator(".large-preview").count(), 0);
     }
+  });
+  const referenceFixture = name => ({ name, mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ7cAAAAASUVORK5CYII=", "base64") });
+  await check("stale image reads cannot replace a newer reference", async () => {
+    await workspace();
+    await page.locator('input[type=file]').setInputFiles(referenceFixture("late.png"));
+    assert.equal(await page.getByRole("button", { name: "Apply changes" }).isEnabled(), false);
+    await page.locator('input[type=file]').setInputFiles(referenceFixture("newer.png"));
+    await page.locator(".reference span").filter({ hasText: "newer.png" }).waitFor();
+    await page.evaluate(() => window.finishLateImage());
+    await page.waitForTimeout(150);
+    assert.ok((await page.locator(".reference span").innerText()).includes("newer.png"));
+  });
+  await check("reference removal cancels a pending read and prevents submission", async () => {
+    await workspace();
+    await page.locator('input[type=file]').setInputFiles(referenceFixture("late.png"));
+    await page.getByRole("button", { name: "Remove reference" }).click();
+    await page.evaluate(() => window.finishLateImage());
+    await page.waitForTimeout(150);
+    assert.equal(await page.locator(".reference").count(), 0);
+    await page.locator("textarea").fill("Fictional design without the removed image");
+    await page.getByRole("button", { name: "Apply changes" }).click();
+    await page.waitForFunction(() => !!window.reviewComplete);
+    assert.ok(!(await page.evaluate(() => window.reviewPayload)).reference);
+    await page.evaluate(() => window.reviewComplete());
+    await page.getByRole("button", { name: "Discard proposal" }).click();
+  });
+  await check("preview navigation preserves editing screen and manifest scope", async () => {
+    await workspace();
+    await page.getByRole("button", { name: "Select Date and slots button", exact: true }).click();
+    await page.getByRole("button", { name: "Interactive preview", exact: true }).click();
+    await page.locator(".preview-controls select").first().selectOption("4");
+    await page.getByRole("button", { name: "Close dialog", exact: true }).click();
+    assert.ok((await page.locator(".element-editor h2").innerText()).includes("Date and slots"));
+    await page.getByLabel("Selected element text").fill("Checked date action");
+    await page.getByRole("button", { name: "Save direct edit", exact: true }).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).manifest.source === "manual");
+    const version = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    assert.equal(version.design.screens[2].action, "Checked date action");
+    assert.equal(version.manifest.scope, "Date and slots");
+  });
+  await check("keyboard slot selection keeps focus on the selected button", async () => {
+    await workspace();
+    await page.getByRole("button", { name: "Interactive preview", exact: true }).click();
+    const frame = page.frameLocator(".large-preview");
+    await frame.getByRole("button", { name: "Explore treatment", exact: true }).click();
+    await frame.getByRole("button", { name: "Choose a time", exact: true }).click();
+    await frame.getByRole("button", { name: "14:15", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    assert.equal(await frame.getByRole("button", { name: "14:15", exact: true }).evaluate(el => document.activeElement === el && el.getAttribute("aria-pressed") === "true"), true);
+  });
+  await check("recording manifest save failure restores privacy state and permits retry", async () => {
+    await workspace();
+    await page.getByRole("button", { name: "Record demo", exact: true }).click();
+    await page.getByRole("button", { name: "Stop demo recording", exact: true }).waitFor();
+    await page.evaluate(() => { window.failRecordingSave = true; });
+    await page.getByRole("button", { name: "Stop demo recording", exact: true }).click();
+    await page.getByRole("button", { name: "Retry recording save", exact: true }).waitFor();
+    assert.ok((await page.locator("body").innerText()).includes("review@example.test"));
+    await page.getByRole("button", { name: "Retry recording save", exact: true }).click();
+    await page.getByRole("button", { name: "Record demo", exact: true }).waitFor();
   });
   const exportContext = await browser.newContext();
   await exportContext.route("**/*", (r) =>

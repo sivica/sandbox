@@ -2,7 +2,7 @@
 const { mkdir, writeFile } = require('node:fs/promises');
 const { join } = require('node:path');
 module.exports = function createDemoRecorder(window, home) {
-  let recording, timer, pending = Promise.resolve();
+  let recording, stopped, timer, pending = Promise.resolve();
   async function frame() {
     if (!recording || window.isDestroyed()) return;
     const current = recording;
@@ -16,6 +16,7 @@ module.exports = function createDemoRecorder(window, home) {
   return {
     async start() {
       if (recording) throw Error('A recording is already active.');
+      if (stopped) throw Error('Retry saving the previous recording first.');
       const directory = join(home, 'recordings', 'demo-' + Date.now());
       await mkdir(directory, { recursive: true, mode: 0o700 });
       recording = { directory, started: performance.now(), frames: [] };
@@ -29,16 +30,29 @@ module.exports = function createDemoRecorder(window, home) {
       }, 500);
       return { recording: true };
     },
+    async retrySave() {
+      if (!stopped) throw Error('No recording is waiting to be saved.');
+      return saveStopped();
+    },
     async stop() {
       if (!recording) throw Error('No recording is active.');
       clearInterval(timer);
       await pending;
-      await frame();
-      const result = recording;
+      try { await frame(); } catch { recording.captureErrors = (recording.captureErrors || 0) + 1; }
+      stopped = recording;
+      stopped.duration = (performance.now() - stopped.started) / 1000;
       recording = null;
-      const duration = (performance.now() - result.started) / 1000;
-      await writeFile(join(result.directory, 'recording.json'), JSON.stringify({ duration, frames: result.frames, scope: 'Kindred app window only', audio: false, capped: !!result.capped, captureErrors: result.captureErrors || 0 }, null, 2), { mode: 0o600 });
-      return { directory: result.directory, duration, frames: result.frames.length };
+      return saveStopped();
     }
   };
+  async function saveStopped() {
+    const result = { recording: false, directory: stopped.directory, duration: stopped.duration, frames: stopped.frames.length, captureErrors: stopped.captureErrors || 0 };
+    try {
+      await writeFile(join(stopped.directory, 'recording.json'), JSON.stringify({ duration: stopped.duration, frames: stopped.frames, scope: 'Kindred app window only', audio: false, capped: !!stopped.capped, captureErrors: stopped.captureErrors || 0 }, null, 2), { mode: 0o600 });
+      stopped = null;
+      return result;
+    } catch (error) {
+      return { ...result, saveError: 'Recording stopped; manifest save failed (' + (error.code || 'write_error') + '). Retry saving.' };
+    }
+  }
 };

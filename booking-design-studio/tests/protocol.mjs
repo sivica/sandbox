@@ -97,8 +97,9 @@ globalThis.fetch = async (url, options = {}) => {
       ),
     );
   }
+  if (url === issuer + "/review-revoke" && fixture.revokeNetwork && calls.filter(c => c.url === url).length === 1) throw Error("Synthetic network failure");
   if (url === issuer + "/review-revoke")
-    return fixture.revokeFailure
+    return fixture.revokePermanent ? json({}, 400) : fixture.revokeTransient && calls.filter(c => c.url === issuer + "/review-revoke").length === 1 ? json({}, 503) : fixture.revokeFailure
       ? json({}, 503)
       : new Response(null, { status: 200 });
   if (url === resource + "/models")
@@ -390,15 +391,36 @@ await check("terminal refresh error clears invalid token set", async () => {
   await assert.rejects(provider.listModels());
   assert.equal((await provider.getSession()).status, "disconnected");
 });
+await check("transient revocation failure retries before clearing credentials", async () => {
+  calls.length = 0;
+  const { provider } = await setup({ seed: true, revokeTransient: true });
+  await provider.disconnect();
+  assert.equal(calls.filter(c => c.url === issuer + "/review-revoke").length, 2);
+  assert.equal((await provider.getSession()).status, "disconnected");
+});
+await check("network revocation failure retries", async () => {
+  calls.length = 0;
+  const { provider } = await setup({ seed: true, revokeNetwork: true });
+  await provider.disconnect();
+  assert.equal(calls.filter(c => c.url === issuer + "/review-revoke").length, 2);
+});
+await check("permanent revocation rejection does not retry", async () => {
+  calls.length = 0;
+  const { provider } = await setup({ seed: true, revokePermanent: true });
+  await assert.rejects(provider.disconnect(), /remote revocation was not confirmed/);
+  assert.equal(calls.filter(c => c.url === issuer + "/review-revoke").length, 1);
+});
 await check(
   "revocation failure clears local credentials and reports uncertainty",
   async () => {
-    const { provider } = await setup({ seed: true, revokeFailure: true });
+    calls.length = 0;
+  const { provider } = await setup({ seed: true, revokeFailure: true });
     await assert.rejects(
       provider.disconnect(),
       /remote revocation was not confirmed/,
     );
     assert.equal((await provider.getSession()).status, "disconnected");
+    assert.equal(calls.filter(c => c.url === issuer + "/review-revoke").length, 3);
   },
 );
 await check(

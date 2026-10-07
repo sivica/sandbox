@@ -569,7 +569,9 @@ export async function createProvider({ storageDir, openBrowser, encryption }) {
             const d = await discovery();
             if (!d.revocation_endpoint)
               throw Error("Revocation endpoint unavailable.");
-            const response = await fetchAuth(d.revocation_endpoint, {
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                const response = await fetchAuth(d.revocation_endpoint, {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: new URLSearchParams({
@@ -578,7 +580,13 @@ export async function createProvider({ storageDir, openBrowser, encryption }) {
                 client_id: p.clientId,
               }),
             });
-            if (response.status !== 200) throw Error("Revocation unconfirmed.");
+                if (response.status === 200) break;
+                if (response.status < 500 || attempt === 2) throw Error("Revocation unconfirmed.");
+              } catch (error) {
+                if (attempt === 2 || error.message === "Revocation unconfirmed.") throw error;
+              }
+              await new Promise(resolve => setTimeout(resolve, 250 * 2 ** attempt));
+            }
             p.lifecycle = { ...p.lifecycle, revokedAt: new Date().toISOString() };
           } catch {
             failed = true;

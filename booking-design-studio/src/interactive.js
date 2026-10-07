@@ -9,7 +9,7 @@ function render(){
  if(step===2){
   root.querySelectorAll('.slots span').forEach(el=>{
    const b=document.createElement('button');b.type='button';b.textContent=el.textContent;b.setAttribute('aria-pressed',String(el.textContent===slot));
-   b.addEventListener('click',()=>{slot=b.textContent;render()});el.replaceWith(b);
+   b.addEventListener('click',()=>{slot=b.textContent;root.querySelectorAll('.slots button').forEach(item=>item.setAttribute('aria-pressed',String(item.textContent===slot)))});el.replaceWith(b);
   });
  }
  if(step===4){const p=document.createElement('p');p.textContent='Synthetic booking complete · illustrative weekday '+slot+' · no reservation created';p.setAttribute('role','status');root.querySelector('.card').append(p);}
