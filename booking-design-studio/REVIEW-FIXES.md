@@ -23,3 +23,7 @@ Source package and shared checklist are updated for this reviewed revision. Inde
 - Manual edit metadata uses the selected editing screen and element rather than the AI composer's scope. Shared accent changes are labelled All screens, and the saved fields are included in metadata.
 
 Three new regressions verify reviewing all five screens before first acceptance, editing an older version then Undo/Redo, and mismatched composer/editor scope in an actual generated ZIP manifest. Build and all 52 checks pass. No live account calls were made. These fixes have not received a second independent product review.
+
+## Design batch follow-ups
+
+Independent Review verified SG-001 and found an unsupported nested scope, stale generation style after preset acceptance, and mobile preview autofocus scrolling past the heading. All three are corrected; four new regression checks bring the suite to 64 passing checks. See DESIGN-BATCH.md and ignored local evidence/review-followups. SG-002/003 independent retesting remains pending.

@@ -58,6 +58,11 @@ export const nestedRoles = [
   { detailHeading: "Detail heading", description: "Treatment description" },
   {}, {}, {},
 ];
+export function refinementTargetAllowed(scope, component) {
+  if (scope === "All screens") return true;
+  const index = screens.indexOf(scope);
+  return index >= 0 && (["title", "subtitle", "action"].includes(component) || Object.hasOwn(nestedRoles[index], component));
+}
 export const contentDefaults = [
   { eyebrow: "REST & RESTORE", description: "A fictional studio treatment" },
   { detailHeading: "A softer pace", description: "Gentle relaxation in a quiet room, with preparation and cleanup time." },

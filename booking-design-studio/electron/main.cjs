@@ -205,6 +205,9 @@ app.whenReady().then(async () => {
         };
       }
       if (action === "generate") {
+        const { refinementTargetAllowed } = await import("../src/design.js");
+        if (!refinementTargetAllowed(payload?.scope, payload?.component))
+          throw Error("Unsupported component for the requested screen. Choose a compatible scope.");
         if (active) throw Error("A generation is already running");
         const expectedEpoch = epoch;
         if (!(await provider.getSession()).sharing)

@@ -11,6 +11,7 @@ import {
   nestedRoles,
   authoredPreset,
   styleDirections,
+  refinementTargetAllowed,
 } from "./design.js";
 import { DesignCanvas } from "./canvas.jsx";
 import { bookingHTML } from "./interactive.js";
@@ -112,6 +113,7 @@ function App() {
     (v) => v.manifest.id === project.selected,
   );
   const selected = savedSelection && { ...savedSelection, design: validateDesign(savedSelection.design) };
+  const compatibleTarget = refinementTargetAllowed(scope, element);
   const usable =
     connection.session?.sharing && models.some((m) => m.slug === model);
   useEffect(() => {
@@ -306,6 +308,7 @@ function App() {
       ...p,
       versions: [...p.versions, version].slice(-20),
       selected: id,
+      ...(source === "authored-preset" ? { style: design.style } : {}),
       redo: [],
       draft:
         source === "sample" || submittedRevision === draftRevision.current
@@ -323,6 +326,10 @@ function App() {
     );
   }
   async function generate() {
+    if (!refinementTargetAllowed(scope, element)) {
+      setError("This component is not editable on the requested screen. Choose a compatible scope or use the selected screen scope.");
+      return;
+    }
     const operation = ++sequence.current;
     const submittedRevision = draftRevision.current;
     await run("Generating designs…", async () => {
@@ -470,6 +477,7 @@ function App() {
         <label className="compact">
           Design style
           <select
+            aria-label="Design style"
             value={project.style}
             onChange={(e) => update({ style: e.target.value })}
           >
@@ -500,6 +508,7 @@ function App() {
           className="primary generate"
           disabled={
             referencePending ||
+            !compatibleTarget ||
             !usable ||
             !project.draft.trim() ||
             !!busy ||
@@ -510,6 +519,10 @@ function App() {
           {selected ? "Apply changes" : "Generate designs"} ↗
         </button>
       </div>
+      {selected && !compatibleTarget && <div role="status" className="scope-warning">
+        <p>The selected {element} role is not editable on {scope}. Choose a compatible Change scope value.</p>
+        <button onClick={() => { invalidateGeneration(); setScope(screens[screen]); }}>Use selected screen scope</button>
+      </div>}
       {(reference || referencePending) && (
         <div className="reference">
           <img alt="Attached design reference" src={reference?.url} />
@@ -1032,9 +1045,9 @@ function App() {
           : "Local design prototype · synthetic bookings · connection pending licensing/eligibility"}
       </footer>
       {stylePreview && <dialog ref={styleDialog} className="style-preview-overlay" aria-label="Authored style preview" onCancel={e => { e.preventDefault(); setStylePreview(null); }}>
+        <button autoFocus onClick={() => setStylePreview(null)}>Close style preview</button>
         <h2>{styles[stylePreview]}</h2><p>{styleDirections[stylePreview]}</p>
         <div className="style-preview-screens">{[0, 1].map(i => <iframe key={i} sandbox="" tabIndex={-1} title={screens[i] + " authored style preview"} srcDoc={screenHTML(authoredPreset(stylePreview), i)} />)}</div>
-        <button autoFocus onClick={() => setStylePreview(null)}>Close style preview</button>
       </dialog>}
       <dialog
         ref={dialog}

@@ -19,3 +19,13 @@ Reload coverage round-trips the browser fixture's saved project and then uses th
 ## Independent Review handoff
 
 Ready for Review verification against SG-001, SG-002 and SG-003. The Review-owned benchmark gap/state files were not modified and these milestones are not labelled independently closed. The five fictional booking steps, fixed service facts, original controller and no-reservation completion are preserved. No production deployment or monitoring restart.
+
+## Independent Review follow-ups
+
+Review independently verified SG-001 on d0ee0f2 and reproduced three bounded follow-ups. They are corrected:
+
+- **SG-002-F1 (P2):** one shared compatibility gate runs before inference in both the renderer and main process. Invalid description scopes disable generation with an explanation and a Use selected screen scope action. The manual target stays unchanged. Regressions verify no request or version for Date/contact/confirmation and isolated description refinement on both compatible screens.
+- **SG-003-F1 (P2):** accepting an authored preset synchronizes the generation style. Preview, staging and discard preserve style and draft. A regression checks the next request's style/previous design, then a later explicit style choice.
+- **SG-003-F2 (P3):** the focused close control is before the heading/screens. At 320px and 390px the dialog opens at scrollTop=0 with heading and first screen visible. Escape returns focus to the trigger.
+
+Build and all **64 checks** pass: 21 protocol, 39 browser/export, one recovery, three recorder. The previous 60 remain passing; four regressions cover these follow-ups. Synthetic evidence is in ignored local `evidence/review-followups/`: complete log, no-request scope results, next-request style payloads, viewport/focus measurements and screenshots. No live inference or paid/account actions, deployment or monitor restart occurred. Independent Review retesting of SG-002/003 is pending; the Review-owned gap/state files remain unchanged.

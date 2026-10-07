@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import http from "node:http";
 import { build } from "esbuild";
 import { chromium } from "@playwright/test";
-import { sample, validateDesign, screenHTML, authoredPreset, palettes } from "../src/design.js";
+import { sample, validateDesign, screenHTML, authoredPreset, palettes, refinementTargetAllowed } from "../src/design.js";
 
 const root = new URL("../", import.meta.url).pathname;
 const base = await mkdtemp(
@@ -900,6 +900,108 @@ try {
     assert.equal(await page.getByLabel("Screen layout",{exact:true}).inputValue(),"list");
     assert.equal(await page.evaluate(()=>JSON.stringify(window.reviewSaved)),before);
     await page.evaluate(()=>sessionStorage.removeItem("sg-persist"));
+  });
+
+
+  await check("SG-002-F1 incompatible component/scope blocks inference and preserves editor", async () => {
+    await workspace();
+    await page.getByRole("button", {name:"Service description",exact:true}).click();
+    await page.locator("textarea").fill("Refine only the description in this screen");
+    const versions = await page.evaluate(()=>JSON.stringify(window.reviewSaved.versions));
+    const calls = await page.evaluate(()=>window.reviewCalls.filter(x=>x==="generate").length);
+    for (const target of ["Date and slots","Contact details","Confirmation"]) {
+      assert.equal(refinementTargetAllowed(target,"description"),false);
+      await page.getByLabel("Change scope").selectOption(target);
+      const apply = page.getByRole("button",{name:"Apply changes"});
+      assert.equal(await apply.isEnabled(),false);
+      await page.getByRole("status").filter({hasText:"not editable on " + target}).waitFor();
+      await apply.evaluate(button=>button.click());
+      assert.equal(await page.evaluate(()=>window.reviewCalls.filter(x=>x==="generate").length),calls);
+      assert.equal(await page.evaluate(()=>JSON.stringify(window.reviewSaved.versions)),versions);
+      assert.ok((await page.locator(".element-editor h2").innerText()).includes("Service selection · description"));
+    }
+    assert.equal(refinementTargetAllowed("Unknown screen","description"),false);
+    assert.equal(refinementTargetAllowed("Date and slots","action"),true);
+    await page.getByRole("button",{name:"Use selected screen scope",exact:true}).click();
+    assert.equal(await page.getByLabel("Change scope").inputValue(),"Service selection");
+    assert.equal(await page.getByRole("button",{name:"Apply changes"}).isEnabled(),true);
+    assert.ok((await page.locator(".element-editor h2").innerText()).includes("Service selection · description"));
+    await writeFile(join(base,"unsupported-scope-blocked.json"),JSON.stringify({targets:["Date and slots","Contact details","Confirmation"],requestsBefore:calls,requestsAfter:await page.evaluate(()=>window.reviewCalls.filter(x=>x==="generate").length),acceptedVersionsUnchanged:versions===await page.evaluate(()=>JSON.stringify(window.reviewSaved.versions))},null,2));
+  });
+  await check("SG-002-F1 description refinement supports both compatible screens", async () => {
+    await workspace();
+    await page.getByRole("button",{name:"Service description",exact:true}).click();
+    for (const [index,target] of [[0,"Service selection"],[1,"Treatment details"]]) {
+      await page.getByLabel("Change scope").selectOption(target);
+      const before = await page.evaluate(()=>window.reviewSaved.versions.at(-1).design);
+      const response=structuredClone(before); response.screens[index].description="Compatible " + target + " copy";
+      await page.evaluate(d=>{window.reviewDesign=d;window.reviewComplete=null},response);
+      await page.locator("textarea").fill("Refine selected description on " + target);
+      await page.getByRole("button",{name:"Apply changes"}).click();
+      await page.waitForFunction(()=>!!window.reviewComplete);
+      assert.equal((await page.evaluate(()=>window.reviewPayload)).scope,target);
+      assert.equal((await page.evaluate(()=>window.reviewPayload)).component,"description");
+      await page.evaluate(()=>window.reviewComplete());
+      await page.getByRole("button",{name:"Accept design",exact:true}).click();
+      await page.waitForFunction(index=>window.reviewSaved.versions.at(-1).design.screens[index].description.startsWith("Compatible"),index);
+      const accepted=await page.evaluate(()=>window.reviewSaved.versions.at(-1));
+      assert.deepEqual(accepted.design,response);
+      assert.deepEqual(accepted.manifest.fields,["description"]);
+      assert.equal(accepted.manifest.scope,target);
+      assert.ok((await page.locator(".element-editor h2").innerText()).includes("Service selection · description"));
+    }
+  });
+  await check("SG-003-F1 accepted preset syncs style, staging/discard preserves it, explicit choice wins", async () => {
+    await workspace();
+    await page.locator("textarea").fill("Preserve this brief");
+    for (const action of ["Preview Modern boutique","Apply Modern boutique style"]) {
+      await page.getByRole("button",{name:action,exact:true}).click();
+      if (action.startsWith("Preview")) await page.keyboard.press("Escape");
+      else await page.getByRole("button",{name:"Discard proposal",exact:true}).click();
+      assert.equal(await page.getByLabel("Design style",{exact:true}).inputValue(),"calm-spa");
+      assert.equal(await page.locator("textarea").inputValue(),"Preserve this brief");
+    }
+    await page.getByRole("button",{name:"Apply Modern boutique style",exact:true}).click();
+    assert.equal(await page.getByLabel("Design style",{exact:true}).inputValue(),"calm-spa");
+    await page.getByRole("button",{name:"Accept design",exact:true}).click();
+    await page.waitForFunction(()=>window.reviewSaved.style==="modern-boutique");
+    assert.equal(await page.getByLabel("Design style",{exact:true}).inputValue(),"modern-boutique");
+    assert.equal(await page.locator("textarea").inputValue(),"Preserve this brief");
+    await page.getByRole("button",{name:"Apply changes"}).click();
+    await page.waitForFunction(()=>!!window.reviewComplete);
+    const payload=await page.evaluate(()=>window.reviewPayload);
+    assert.equal(payload.style,"modern-boutique"); assert.equal(payload.previous.style,"modern-boutique");
+    await page.evaluate(()=>window.reviewComplete());
+    await page.getByRole("button",{name:"Discard proposal",exact:true}).click();
+    await page.getByLabel("Design style",{exact:true}).selectOption("clean-clinic");
+    await page.evaluate(()=>{window.reviewComplete=null});
+    await page.getByRole("button",{name:"Apply changes"}).click();
+    await page.waitForFunction(()=>!!window.reviewComplete);
+    assert.equal((await page.evaluate(()=>window.reviewPayload)).style,"clean-clinic");
+    await page.evaluate(()=>window.reviewComplete());
+    await page.getByRole("button",{name:"Discard proposal",exact:true}).click();
+    await writeFile(join(base,"preset-style-sync.json"),JSON.stringify({presetRequest:payload,explicitChoiceRequest:await page.evaluate(()=>window.reviewPayload)},null,2));
+  });
+  await check("SG-003-F2 mobile preview opens at its heading with keyboard focus and Escape return", async () => {
+    const measurements=[];
+    for(const width of [320,390]) {
+      await page.setViewportSize({width,height:850}); await workspace();
+      const trigger=page.getByRole("button",{name:"Preview Calm spa",exact:true}); await trigger.click();
+      const dialog=page.getByRole("dialog",{name:"Authored style preview"});
+      await dialog.getByRole("button",{name:"Close style preview",exact:true}).waitFor();
+      const measurement=await dialog.evaluate(el=>{
+        const heading=el.querySelector("h2").getBoundingClientRect(),frame=el.querySelector("iframe").getBoundingClientRect(),box=el.getBoundingClientRect(),close=el.querySelector("button").getBoundingClientRect();
+        return {width:innerWidth,scrollTop:el.scrollTop,headingTop:heading.top,headingBottom:heading.bottom,dialogTop:box.top,frameTop:frame.top,viewportHeight:innerHeight,closeHeight:close.height,closeFocused:el.querySelector("button")===document.activeElement};
+      });
+      assert.equal(measurement.scrollTop,0);assert.ok(measurement.headingTop>=measurement.dialogTop);assert.ok(measurement.headingBottom<measurement.viewportHeight);
+      assert.ok(measurement.frameTop<measurement.viewportHeight);assert.ok(measurement.closeHeight>=44);assert.equal(measurement.closeFocused,true);
+      await page.frameLocator(".style-preview-screens iframe").first().getByText("Demo Relaxation",{exact:true}).first().waitFor();
+      await page.screenshot({path:join(base,`style-preview-fixed-${width}.png`)});
+      await page.keyboard.press("Escape"); await dialog.waitFor({state:"detached"});
+      assert.equal(await trigger.evaluate(el=>el===document.activeElement),true);measurements.push(measurement);
+    }
+    await writeFile(join(base,"mobile-preview-focus.json"),JSON.stringify(measurements,null,2));
+    await page.setViewportSize({width:1200,height:900});
   });
 
   await context.close();

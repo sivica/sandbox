@@ -7,13 +7,13 @@
 - Usage-limit failure and retry verified with synthetic responses; prior design survives. Actual account allowance was not exhausted.
 - Continuous 105-second app-window video shows real generation, accepted scoped refinement, all five interactive screens (14:15) and export. No account identity or authorization screen is recorded; no microphone audio. Source capture is 2 fps, encoded at 25 fps, with no sequence edits or acceleration.
 - Fixed a blank interactive preview by mounting its iframe only while the preview dialog is open. Fixed mobile header overflow and clearing the reference file input.
-- Build and 60 automated checks passed: 21 protocol, 35 browser/export, one authentication recovery, three recorder.
+- Build and 64 automated checks passed: 21 protocol, 39 browser/export, one authentication recovery, three recorder.
 - Final exported version e53498d2-8db4-4cdf-a189-741cae7e42ef: source ChatGPT, scope Date and slots/action, padding 28px; five matching previews and interactive HTML. No reservation created.
 
 - Three additional product-review defects corrected: full proposal review, branch-aware Undo/Redo and manual export scope metadata.
 - Five P2 review findings corrected and covered by regression tests; see REVIEW-FIXES.md.
 
-- Authored layout variants, nested copy roles and offline two-screen style picker implemented; see DESIGN-BATCH.md. Ready for independent Review verification.
+- Authored layout variants, nested copy roles and offline two-screen style picker implemented; see DESIGN-BATCH.md. SG-001 independently verified; three SG-002/003 follow-ups corrected and ready for Review retest.
 
 ## Optional human follow-up
 - Independent accessibility listening/gesture and physical-device acceptance remain unperformed. They are optional for this personal demo.
