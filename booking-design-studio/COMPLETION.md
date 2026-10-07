@@ -22,7 +22,7 @@ Recorded on 7 October 2026. All data in previews and prompts was fictional.
 - ZIP contains a validated design specification, five matching static screen previews, interactive-design.html and the separate trusted booking-controller baseline. The preview creates no appointment.
 
 ## Automated coverage
-49 checks pass: 21 protocol, 24 browser/export, one terminal authentication recovery, three recorder. Added tests cover image conversion and non-persistence, recording identity privacy, repeat preview opening, usage-limit failure preserving the design and successful retry. The clean exported package installs and builds. Review failure cases and corrections are covered in REVIEW-FIXES.md.
+52 checks pass: 21 protocol, 27 browser/export, one terminal authentication recovery, three recorder. Added tests cover image conversion and non-persistence, recording identity privacy, repeat preview opening, usage-limit failure preserving the design and successful retry. The clean exported package installs and builds. Review failure cases and corrections are covered in REVIEW-FIXES.md.
 
 Usage-limit tests simulate server responses. They do not prove the account's actual reset timing, allowance amount or a live exhaustion event. Independent human screen-reader and physical-device acceptance was not performed. Those checks remain optional for this personal demo.
 

@@ -89,7 +89,8 @@ function App() {
     [previewSize, setPreviewSize] = useState("mobile"),
     [view, setView] = useState("canvas"),
     [element, setElement] = useState("action"),
-    [proposal, setProposal] = useState(null);
+    [proposal, setProposal] = useState(null),
+    [proposalScreen, setProposalScreen] = useState(0);
   const menuButton = useRef(),
     menuRoot = useRef(),
     referenceInput = useRef(),
@@ -165,7 +166,7 @@ function App() {
   const update = (patch) => {
     if (Object.hasOwn(patch, "draft")) draftRevision.current++;
     if (Object.hasOwn(patch, "selected")) invalidateGeneration();
-    setProject((p) => ({ ...p, ...patch }));
+    setProject((p) => ({ ...p, ...patch, ...(Object.hasOwn(patch, "selected") ? { redo: [] } : {}) }));
   };
   async function refreshAccounts() {
     const r = await call("state");
@@ -258,7 +259,7 @@ function App() {
     closeMenu();
     setModal(type);
   }
-  function accept(design, source, parent = null, submittedRevision = null) {
+  function accept(design, source, parent = null, submittedRevision = null, metadata = {}) {
     if (source === "sample") invalidateGeneration();
     setError("");
     const id = crypto.randomUUID();
@@ -267,10 +268,11 @@ function App() {
       manifest: {
         id,
         parent,
-        scope,
+        scope: metadata.scope || scope,
         source,
         validation: "validated schema and trusted preview templates",
-        component: element,
+        component: Object.hasOwn(metadata, "component") ? metadata.component : element,
+        ...(metadata.fields ? { fields: metadata.fields } : {}),
         sourceBaseline: "6038e4faceb4427af8f1256a691934431af908d0",
         createdAt: new Date().toISOString(),
         validatedFiles: [
@@ -288,6 +290,7 @@ function App() {
       ...p,
       versions: [...p.versions, version].slice(-20),
       selected: id,
+      redo: [],
       draft:
         source === "sample" || submittedRevision === draftRevision.current
           ? ""
@@ -337,8 +340,11 @@ function App() {
         };
       } // No executable model output is accepted.
       for (let i = 0; i < 5; i++) screenHTML(d, i);
+      setProposalScreen(scope === "All screens" ? 0 : screens.indexOf(scope));
       setProposal({
         design: d,
+        scope,
+        component: scope === "All screens" ? null : element,
         parent: selected?.manifest.id || null,
         submittedRevision,
         operation,
@@ -758,44 +764,19 @@ function App() {
                     {view === "canvas" ? "Show screen list" : "Show canvas"}
                   </button>
                   <button
-                    disabled={
-                      project.versions.findIndex(
-                        (v) => v.manifest.id === project.selected,
-                      ) <= 0
-                    }
-                    onClick={() =>
-                      update({
-                        selected:
-                          project.versions[
-                            project.versions.findIndex(
-                              (v) => v.manifest.id === project.selected,
-                            ) - 1
-                          ].manifest.id,
-                      })
-                    }
-                  >
-                    Undo
-                  </button>
+                    disabled={!project.versions.some(v => v.manifest.id === selected.manifest.parent)}
+                    onClick={() => {
+                      invalidateGeneration();
+                      setProject(p => ({ ...p, selected: selected.manifest.parent, redo: [...(p.redo || []), selected.manifest.id] }));
+                    }}
+                  >Undo</button>
                   <button
-                    disabled={
-                      project.versions.findIndex(
-                        (v) => v.manifest.id === project.selected,
-                      ) >=
-                      project.versions.length - 1
-                    }
-                    onClick={() =>
-                      update({
-                        selected:
-                          project.versions[
-                            project.versions.findIndex(
-                              (v) => v.manifest.id === project.selected,
-                            ) + 1
-                          ].manifest.id,
-                      })
-                    }
-                  >
-                    Redo
-                  </button>
+                    disabled={!project.versions.some(v => v.manifest.id === project.redo?.at(-1) && v.manifest.parent === project.selected)}
+                    onClick={() => {
+                      invalidateGeneration();
+                      setProject(p => ({ ...p, selected: p.redo.at(-1), redo: p.redo.slice(0, -1) }));
+                    }}
+                  >Redo</button>
                   <button onClick={(e) => openModal("preview", e, 0)}>
                     Interactive preview
                   </button>
@@ -835,7 +816,9 @@ function App() {
                       );
                       if (scope === "All screens")
                         d.tokens.accent = String(f.get("accent"));
-                      accept(validateDesign(d), "manual", selected.manifest.id);
+                      const sharedChanged = d.tokens.accent !== selected.design.tokens.accent;
+                      const fields = [element, "actionPadding", ...(sharedChanged ? ["tokens.accent"] : [])];
+                      accept(validateDesign(d), "manual", selected.manifest.id, null, { scope: sharedChanged ? "All screens" : screens[screen], component: element, fields });
                     }}
                   >
                     <label>
@@ -911,13 +894,19 @@ function App() {
               <section className="proposal" aria-label="Proposed design">
                 <h2>Review proposed design</h2>
                 <p>
-                  Scope: {scope} · accept creates a new version. Your current
+                  Scope: {proposal.scope} · accept creates a new version. Your current
                   design stays available.
                 </p>
+                <label>
+                  Proposed screen
+                  <select aria-label="Proposed screen" value={proposalScreen} onChange={e => setProposalScreen(Number(e.target.value))}>
+                    {screens.map((name, i) => <option value={i} key={name}>{name}</option>)}
+                  </select>
+                </label>
                 <iframe
                   sandbox=""
                   title="Proposed design preview"
-                  srcDoc={screenHTML(proposal.design, screen)}
+                  srcDoc={screenHTML(proposal.design, proposalScreen)}
                 />
                 <button
                   onClick={() => {
@@ -930,6 +919,7 @@ function App() {
                       "chatgpt",
                       proposal.parent,
                       proposal.submittedRevision,
+                      { scope: proposal.scope, component: proposal.component },
                     );
                     setProposal(null);
                   }}

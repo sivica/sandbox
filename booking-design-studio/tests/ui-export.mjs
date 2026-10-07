@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { unzipSync } from "fflate";
 import { readFile, writeFile, mkdir, cp, mkdtemp } from "node:fs/promises";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -572,6 +573,54 @@ try {
     assert.ok((await page.locator("body").innerText()).includes("review@example.test"));
     await page.getByRole("button", { name: "Retry recording save", exact: true }).click();
     await page.getByRole("button", { name: "Record demo", exact: true }).waitFor();
+  });
+  await check("first proposal allows all five screens to be reviewed before acceptance", async () => {
+    await page.goto(origin);
+    await page.getByRole("button", { name: "← Open local workspace" }).click();
+    await page.locator("textarea").fill("Create all five fictional booking screens");
+    await page.getByRole("button", { name: "Generate designs" }).click();
+    await page.waitForFunction(() => !!window.reviewComplete);
+    await page.evaluate(() => window.reviewComplete());
+    for (let i=0; i<5; i++) {
+      await page.getByLabel("Proposed screen", { exact: true }).selectOption(String(i));
+      await page.frameLocator('.proposal iframe').getByText("STEP " + (i+1) + " OF 5", { exact: true }).waitFor();
+      assert.equal((await page.evaluate(() => window.reviewSaved)).versions.length, 0);
+    }
+    await page.getByRole("button", { name: "Accept design", exact: true }).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.length === 1);
+  });
+  await check("undo follows parent branch and new edits discard old redo path", async () => {
+    await workspace();
+    const first = await page.evaluate(() => window.reviewSaved.selected);
+    await page.getByLabel("Selected element text").fill("Version two action");
+    await page.getByRole("button", { name: "Save direct edit", exact: true }).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.length === 2);
+    const second = await page.evaluate(() => window.reviewSaved.selected);
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await page.getByLabel("Selected element text").fill("Branched version three action");
+    await page.getByRole("button", { name: "Save direct edit", exact: true }).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.length === 3);
+    const third = await page.evaluate(() => window.reviewSaved.selected);
+    assert.equal(await page.getByRole("button", { name: "Redo", exact: true }).isEnabled(), false);
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await page.waitForFunction(id => window.reviewSaved.selected === id, first);
+    await page.getByRole("button", { name: "Redo", exact: true }).click();
+    await page.waitForFunction(id => window.reviewSaved.selected === id, third);
+    assert.notEqual(third, second);
+  });
+  await check("manual export metadata follows edited screen rather than refinement scope", async () => {
+    await workspace();
+    await page.getByLabel("Change scope").selectOption("Date and slots");
+    await page.getByLabel("Selected element text").fill("Changed service action");
+    await page.getByRole("button", { name: "Save direct edit", exact: true }).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).manifest.source === "manual");
+    const version = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    const manifest = JSON.parse(Buffer.from(unzipSync(exportZip(version))["version-manifest.json"]).toString());
+    assert.equal(manifest.scope, "Service selection");
+    assert.equal(manifest.component, "action");
+    assert.ok(manifest.fields.includes("action"));
+    assert.equal(version.design.screens[0].action, "Changed service action");
+    assert.equal(version.design.screens[2].action, "Continue");
   });
   const exportContext = await browser.newContext();
   await exportContext.route("**/*", (r) =>
