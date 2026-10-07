@@ -12,6 +12,8 @@ const actions = new Set([
   "cancel",
   "usage",
   "export",
+  "startRecording",
+  "stopRecording",
 ]);
 contextBridge.exposeInMainWorld("kindred", {
   call: (action, payload) => {

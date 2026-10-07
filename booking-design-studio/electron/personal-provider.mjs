@@ -134,6 +134,7 @@ export async function createProvider({ storageDir, openBrowser, encryption }) {
             : "disconnected",
       sharing: !!p?.tokens && !p.pending && p.scopes?.includes(permission),
       profileId: p?.id,
+      lifecycle: p?.lifecycle || {},
       identity: p?.identity || {},
       error: p?.pending
         ? {
@@ -258,6 +259,7 @@ export async function createProvider({ storageDir, openBrowser, encryption }) {
     });
     const tokens = tokenSet(pending.data); // Expiry remains tied to receipt time, not retry time.
     tokens.expires = pending.receivedAt + pending.data.expires_in * 1000;
+    p.lifecycle = { ...p.lifecycle, renewedAt: new Date().toISOString() };
     p.tokens = tokens;
     p.scopes = pending.data.scope.split(/\s+/);
     p.identity = identity.identity;
@@ -577,6 +579,7 @@ export async function createProvider({ storageDir, openBrowser, encryption }) {
               }),
             });
             if (response.status !== 200) throw Error("Revocation unconfirmed.");
+            p.lifecycle = { ...p.lifecycle, revokedAt: new Date().toISOString() };
           } catch {
             failed = true;
           }

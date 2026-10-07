@@ -1,0 +1,22 @@
+const assert = require('node:assert/strict');
+const { mkdtemp, readFile, stat } = require('node:fs/promises');
+const { join } = require('node:path');
+const { tmpdir } = require('node:os');
+const create = require('../electron/demo-recorder.cjs');
+(async () => {
+  const home = await mkdtemp(join(tmpdir(), 'kindred-recorder-'));
+  let captures = 0;
+  const recorder = create({ isDestroyed: () => false, webContents: { capturePage: async () => { captures++; return { toJPEG: () => Buffer.from('synthetic-frame') }; } } }, home);
+  await recorder.start();
+  await assert.rejects(recorder.start(), /already active/);
+  await new Promise(r => setTimeout(r, 550));
+  const result = await recorder.stop();
+  const manifest = JSON.parse(await readFile(join(result.directory, 'recording.json'), 'utf8'));
+  assert.ok(captures >= 3);
+  assert.equal(manifest.audio, false);
+  assert.equal(manifest.captureErrors, 0);
+  assert.ok(manifest.frames.every((f,i,a) => !i || f.elapsed >= a[i-1].elapsed));
+  assert.equal((await stat(join(result.directory, manifest.frames[0].name))).mode & 0o777, 0o600);
+  await assert.rejects(recorder.stop(), /No recording/);
+  console.log(JSON.stringify({ name: 'app-only recorder serial frames, lifecycle and private files', passed: true, frames: captures }));
+})().catch(e => { console.error(e); process.exitCode=1; });

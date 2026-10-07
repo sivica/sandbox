@@ -9,7 +9,7 @@
     "start": "electron .",
     "personal": "node launch-personal.mjs",
     "preview": "node preview-server.mjs",
-    "test": "node tests/protocol.mjs && node tests/ui-export.mjs && node tests/recovery.mjs"
+    "test": "node tests/protocol.mjs && node tests/ui-export.mjs && node tests/recovery.mjs && node tests/recorder.cjs"
   },
   "dependencies": {
     "@xyflow/react": "12.12.0",

@@ -1,25 +1,24 @@
-# Studio status
+# Studio status — 7 October 2026
 
 ## Done
-- Local personal app: ChatGPT sign-in, prompt composer, five-screen canvas, scoped element selection, direct edits, accepted versions, undo/redo and mobile list fallback.
-- Real account authorization, model discovery, completed generation and completed refinement verified on this Mac. The encrypted connection resumed after restart.
-- Initial generation rejected an invalid radius; the model instructions now include explicit valid JSON and token examples. A retry succeeded. Human review caught invented fictional dates and guest names; a real refinement corrected them.
-- Accepted version 14ed08bc-0d08-4186-9f36-c3aeb1a4b74b has matching synthetic preview/export and action padding 24px.
-- Native interactive walkthrough completed all five screens, selecting 14:15. No reservation was created.
-- ZIP verified: five screens, matching interactive HTML, design specification and source=chatgpt version manifest; no credentials.
-- Build and all 34 synthetic checks passed again. These checks simulate account lifecycle responses.
-- A 50-second edited still-capture walkthrough and the accepted ZIP are saved in the shared Google Drive folder. Account identity is masked in the delivered video.
+- Personal local ChatGPT sign-in, account model discovery, live generation, scoped refinement, five-screen canvas, direct edits, versions and undo/redo.
+- Reference-image generation verified with GPT-6-Astra using a fictional design screenshot. Images are resized, stripped of metadata, bounded and disclosed before submission; not saved in the project.
+- Real access-token renewal at 13:55:03 UTC; remote revocation confirmed at 14:15:17 UTC; reconnect using the same registration and completed inference verified afterwards.
+- Usage-limit failure and retry verified with synthetic responses; prior design survives. Actual account allowance was not exhausted.
+- Continuous 105-second app-window video shows real generation, accepted scoped refinement, all five interactive screens (14:15) and export. No account identity or authorization screen is recorded; no microphone audio. Source capture is 2 fps, encoded at 25 fps, with no sequence edits or acceleration.
+- Fixed a blank interactive preview by mounting its iframe only while the preview dialog is open. Fixed mobile header overflow and clearing the reference file input.
+- Build and 39 automated checks passed: 18 protocol, 19 browser/export, one authentication recovery, one recorder.
+- Final exported version e53498d2-8db4-4cdf-a189-741cae7e42ef: source ChatGPT, scope Date and slots/action, padding 28px; five matching previews and interactive HTML. No reservation created.
 
-## Left
-- Continuous Shopify/Sleek-style recording showing live generation/refinement. QuickTime's screen-recording option was disabled and the system capture UI timed out. The delivered video explicitly identifies itself as an edited screen-capture walkthrough; generation and consent are not depicted.
-- Verify real account renewal, revocation and usage-limit recovery. Current connection is retained.
-- Reference-image generation (attachments currently support local preview/removal only).
-- Independent human accessibility/physical-device acceptance and commercial distribution eligibility, if those become goals.
-
-## Scope
-Personal local-only tool using the authorized ChatGPT allowance. Preview uses fixed trusted templates and fictional data; no arbitrary generated code runs. The separate booking-controller baseline still needs integration review before real use. No production deployment, real bookings or monitoring restart.
+## Optional human follow-up
+- Independent accessibility listening/gesture and physical-device acceptance remain unperformed. They are optional for this personal demo.
+- Commercial distribution, production booking integration and real business acceptance are separate future decisions, not remaining personal-demo work.
 
 ## Deliverables
-- Video: https://drive.google.com/file/d/1ZF3po12Mubw9oqGgyzJoHfq-9AuPeN9C/view
-- Accepted design: https://drive.google.com/file/d/1k6Ctrv_WA9ZGTYUVsIqAV78FX3zsA__0/view
-- Details: video/CONNECTED-DEMO.md
+- Continuous video: https://drive.google.com/file/d/1sJkqGRFKyRjhOZOapCngpWWlA9kcGkNn/view
+- Final design ZIP: https://drive.google.com/file/d/1ilNz8ZG86yGe6nYubUDyxnNqH-QAbDXx/view
+- Plan/checklist: https://docs.google.com/document/d/1g5oBrSCaZyKYGjsM9Bp_kKB3IQQ-STU9IfWdfxIUIeM/edit
+- Verification detail: COMPLETION.md
+
+## Scope
+Personal local-only tool using the authorized ChatGPT allowance. Fixed trusted templates and fictional data; no arbitrary generated code execution, real bookings, production deployment or monitoring restart. Disable account credit usage in ChatGPT for allowance-only requests; this app supplies no API-key fallback.

@@ -216,11 +216,16 @@ try {
             window.reviewSaved = payload;
             return {};
           }
-          if (action === "generate")
+          if (action === "startRecording") return { recording: true };
+          if (action === "stopRecording") return { directory: "/synthetic/recording" };
+          if (action === "generate") {
+            window.reviewPayload = payload;
+            if (window.reviewLimit) return { error: "ChatGPT usage limit reached. Try again after reset." };
             return await new Promise((resolve) => {
               window.reviewComplete = () =>
                 resolve({ text: JSON.stringify(design) });
             });
+          }
           if (action === "cancel" || action === "usage" || action === "export")
             return {};
           throw Error("Unexpected synthetic UI action " + action);
@@ -454,6 +459,54 @@ try {
   });
   await new Promise((r) => exportServer.listen(0, "127.0.0.1", r));
   const exportOrigin = "http://127.0.0.1:" + exportServer.address().port;
+  await check("usage-limit failure preserves design and allows retry after recovery", async () => {
+    await workspace();
+    const before = await page.evaluate(() => JSON.stringify(window.reviewSaved.versions));
+    await page.evaluate(() => { window.reviewLimit = true; });
+    await page.locator("textarea").fill("Refine the fictional booking design");
+    await page.getByRole("button", { name: "Apply changes" }).click();
+    await page.getByRole("alert").filter({ hasText: "usage limit reached" }).waitFor();
+    assert.equal(await page.evaluate(() => JSON.stringify(window.reviewSaved.versions)), before);
+    await page.evaluate(() => { window.reviewLimit = false; });
+    await page.getByRole("button", { name: "Apply changes" }).click();
+    await page.waitForFunction(() => !!window.reviewComplete);
+    await page.evaluate(() => window.reviewComplete());
+    await page.getByRole("button", { name: "Accept design", exact: true }).click();
+    assert.notEqual(await page.evaluate(() => JSON.stringify(window.reviewSaved.versions)), before);
+  });
+  await check("recording hides account identity and restores it after stop", async () => {
+    await workspace();
+    await page.getByRole("button", { name: "Record demo", exact: true }).click();
+    await page.getByRole("button", { name: "Stop demo recording", exact: true }).waitFor();
+    assert.ok(!(await page.locator("body").innerText()).includes("review@example.test"));
+    await page.getByRole("button", { name: "Stop demo recording", exact: true }).click();
+    await page.getByRole("button", { name: "Record demo", exact: true }).waitFor();
+    assert.ok((await page.locator("body").innerText()).includes("review@example.test"));
+  });
+  await check("reference image is bounded JPEG input and absent from saved project", async () => {
+    await workspace();
+    await page.locator('input[type="file"]').setInputFiles({ name: "fictional.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ7cAAAAASUVORK5CYII=", "base64") });
+    await page.getByRole("button", { name: "Remove reference" }).waitFor();
+    await page.locator("textarea").fill("Create a fictional treatment design inspired by this image");
+    await page.getByRole("button", { name: "Apply changes" }).click();
+    await page.waitForFunction(() => !!window.reviewComplete);
+    const payload = await page.evaluate(() => window.reviewPayload);
+    assert.ok(payload.reference.startsWith("data:image/jpeg;base64,"));
+    await page.evaluate(() => window.reviewComplete());
+    await page.getByRole("button", { name: "Accept design", exact: true }).click();
+    assert.ok(!JSON.stringify(await page.evaluate(() => window.reviewSaved)).includes("data:image"));
+    await page.getByRole("button", { name: "Remove reference" }).click();
+    assert.equal(await page.getByRole("button", { name: "Remove reference" }).count(), 0);
+  });
+  await check("interactive dialog initializes on every opening", async () => {
+    await workspace();
+    for (let attempt=0; attempt<2; attempt++) {
+      await page.getByRole("button", { name: "Interactive preview", exact: true }).click();
+      await page.frameLocator(".large-preview").getByRole("button", { name: "Explore treatment", exact: true }).waitFor();
+      await page.getByRole("button", { name: "Close dialog", exact: true }).click();
+      assert.equal(await page.locator(".large-preview").count(), 0);
+    }
+  });
   const exportContext = await browser.newContext();
   await exportContext.route("**/*", (r) =>
     new URL(r.request().url()).origin === exportOrigin

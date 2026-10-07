@@ -67,6 +67,8 @@ function App() {
       versions: [],
       selected: null,
     }),
+    [recording, setRecording] = useState(false),
+    [recordingPending, setRecordingPending] = useState(false),
     [ready, setReady] = useState(false),
     [connection, setConnection] = useState({ configured: false, session: {} }),
     [models, setModels] = useState([]),
@@ -87,6 +89,7 @@ function App() {
     [proposal, setProposal] = useState(null);
   const menuButton = useRef(),
     menuRoot = useRef(),
+    referenceInput = useRef(),
     dialog = useRef(),
     returnFocus = useRef(),
     sequence = useRef(0),
@@ -110,6 +113,7 @@ function App() {
             .then((catalog) => {
               setModels(catalog.models);
               setModel(catalog.models[0]?.slug || "");
+              call("state").then(setConnection).catch(() => {});
             })
             .catch(async (e) => {
               try {
@@ -303,8 +307,10 @@ function App() {
         previous: selected?.design,
         component: scope === "All screens" ? null : element,
         model,
+        reference: reference?.url,
       });
       if (operation !== sequence.current) return;
+      if (r.connection) setConnection(r.connection);
       let text = r.text.trim();
       text = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
       let d = validateDesign(JSON.parse(text));
@@ -389,6 +395,7 @@ function App() {
         <label className="attachment">
           ＋ Reference
           <input
+            ref={referenceInput}
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={(e) => {
@@ -399,8 +406,20 @@ function App() {
                 return;
               }
               const reader = new FileReader();
-              reader.onload = () =>
-                setReference({ name: file.name, url: reader.result });
+              reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                  const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+                  const canvas = document.createElement("canvas");
+                  canvas.width = Math.round(img.width * scale);
+                  canvas.height = Math.round(img.height * scale);
+                  canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                  invalidateGeneration();
+                  setReference({ name: file.name, url: canvas.toDataURL("image/jpeg", 0.85) });
+                };
+                img.onerror = () => setError("Invalid reference image.");
+                img.src = reader.result;
+              };
               reader.readAsDataURL(file);
             }}
           />
@@ -440,7 +459,6 @@ function App() {
             !usable ||
             !project.draft.trim() ||
             !!busy ||
-            !!reference ||
             !!proposal
           }
           onClick={generate}
@@ -454,25 +472,40 @@ function App() {
           <span>
             {reference.name}
             <br />
-            Reference submission is pending provider/model support.
+            This reference will be sent to OpenAI with your next request. Use fictional, non-sensitive designs. Images are not saved in the project.
           </span>
-          <button onClick={() => setReference(null)}>Remove reference</button>
+          <button onClick={() => { invalidateGeneration(); setReference(null); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove reference</button>
         </div>
       )}
       <small>
+        Reference inputs require an image-capable account model.
         Uses your ChatGPT allowance. No separate AI credits. Disable account
         credit usage for allowance-only requests.
       </small>
     </section>
   );
   return (
-    <div className="app">
+    <div className={recording ? "app demo-recording" : "app"}>
       <header>
-        <button className="wordmark" onClick={() => setPage("welcome")}>
+        <button disabled={recording} className="wordmark" onClick={() => setPage("welcome")}>
           ◌ KINDRED <span>Design Studio</span>
         </button>
         {page === "workspace" && (
           <div className="header-actions">
+            {desktop && <button disabled={recordingPending} onClick={async () => {
+              setRecordingPending(true);
+              try {
+                if (recording) {
+                  const result = await call("stopRecording");
+                  setRecording(false);
+                  setMessage("App-window recording saved: " + result.directory);
+                } else {
+                  setRecording(true);
+                  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                  await call("startRecording");
+                }
+              } catch (e) { if (!recording) setRecording(false); setError(e.message); } finally { setRecordingPending(false); }
+            }}>{recording ? "Stop demo recording" : "Record demo"}</button>}
             <label className="compact">
               Appearance
               <select
@@ -534,6 +567,7 @@ function App() {
                 </button>
                 <button
                   role="menuitem"
+                  disabled={recording}
                   onClick={() => {
                     closeMenu();
                     call("usage").catch((e) => setError(e.message));
@@ -543,6 +577,7 @@ function App() {
                 </button>
                 <button
                   role="menuitem"
+                  disabled={recording}
                   onClick={() => {
                     closeMenu();
                     openModal("accounts");
@@ -553,6 +588,7 @@ function App() {
                 </button>
                 <button
                   role="menuitem"
+                  disabled={recording}
                   onClick={() => {
                     closeMenu();
                     sequence.current++;
@@ -627,7 +663,7 @@ function App() {
                 <h1>{selected ? project.name : "Start designing your app"}</h1>
               </div>
               <div className="connection-pill">
-                {connection.session?.identity?.email && (
+                {!recording && connection.session?.identity?.email && (
                   <span>
                     {connection.session.identity.name || "ChatGPT account"} ·{" "}
                     {connection.session.identity.email} ·{" "}
@@ -637,7 +673,10 @@ function App() {
                 {connection.session?.sharing
                   ? "Using ChatGPT plan"
                   : "Local prototype · not connected"}
+                {!recording && connection.session?.lifecycle?.renewedAt && <small>Session renewed: {connection.session.lifecycle.renewedAt}</small>}
+                {!recording && connection.session?.lifecycle?.revokedAt && <small>Session revoked: {connection.session.lifecycle.revokedAt}</small>}
                 <button
+                  disabled={recording}
                   onClick={() =>
                     connection.session?.sharing ? call("usage") : connect()
                   }
@@ -1008,7 +1047,7 @@ function App() {
             <button className="primary">Save name</button>
           </form>
         ) : (
-          selected && (
+          modal === "preview" && selected && (
             <>
               <div className="preview-controls">
                 <label>

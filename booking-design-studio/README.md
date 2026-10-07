@@ -9,7 +9,7 @@ Node 22+ and macOS: `npm ci`, `npm run build`, `npm start`. For the browser visu
 ## Delivered
 
 - Getting started with Continue with ChatGPT and truthful unavailable-connection state.
-- Prompt, three styles, optional local reference preview/removal and editable inspiration cards.
+- Prompt, three styles, optional reference-image generation/removal and editable inspiration cards.
 - Authored sample designs above the refinement input, selected version, screen scope and project name.
 - Accessible More menu, sandboxed larger screen preview and ZIP export.
 - Persisted drafts, names and up to 20 versions (Electron userData; browser localStorage).
@@ -23,7 +23,7 @@ For your own local use, run `npm run personal` after `npm ci` and `npm run build
 
 This mode uses an original connector implemented from OpenAI's public protocol documentation, not DevKit code or existing Codex credentials. It discovers your account's available models, streams completed design responses, rotates renewable credentials and supports disconnect/revocation. Credentials are encrypted using the operating system and stored separately under macOS Application Support/kindred-personal-design-studio. Project drafts and exports are local; prompts are sent to OpenAI when you generate.
 
-Build passed. Sign-in, completed inference, renewal and revocation have **not** been verified with a real account. The app launched, but the Mac was locked. Use fictional treatment-booking briefs while completing validation. Reference images are preview-only and cannot be submitted for generation yet.
+Real sign-in, completed generation/refinement, encrypted connection resumption, access-token renewal, remote revocation and returning sign-in have been verified on this Mac. GPT-6-Astra also completed reference-image generation from a fictional screenshot. Usage-limit failure and recovery are tested with synthetic responses; the real allowance was not exhausted. See STATUS.md and COMPLETION.md for evidence and limits.
 
 Personal mode is separate from hosted or paid distribution; this implementation does not establish eligibility for those uses.
 
@@ -36,7 +36,7 @@ Sources:
 - https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt
 - https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference
 
-The personal mode above now supplies an original independent implementation. Resolve commercial licensing/eligibility before any commercial distribution. Hosted distribution separately requires provider access approval. The UI and connection wiring are implemented; real authorization and generation remain unverified.
+The personal mode above now supplies an original independent implementation. Resolve commercial licensing/eligibility before any commercial distribution. Hosted distribution separately requires provider access approval. The personal app has verified authorization and generation; this is not evidence of commercial eligibility.
 
 ## Authorized provider boundary
 
@@ -46,7 +46,7 @@ The trusted main process can load an independently supplied provider with `KINDR
 - Validate official OAuth identity, state, nonce and PKCE; grant plan usage separately; persist host/client registrations.
 - Stream Responses with `store:false`, `stream:true`, account-specific model discovery. Return `{text,completed:true}` only after `response.completed`. Reject interrupted/incomplete/failed requests.
 - Respect AbortSignal, account switching, renewable-token rotation and disconnect/revocation failure reporting.
-- Reference submission is disabled pending an authorized image-input-capable provider; the current contract is text only.
+- Reference submission uses Responses input_image data URLs with an image-capable account model. Renderer and main process enforce size/type/dimension checks and re-encode images. References are ephemeral and sent only when attached to a generation request.
 
 The main process rejects concurrent generation, stale completions and unsupported models/styles; renderer validates the JSON specification and renders five static previews. There is no arbitrary generated code or command execution. New specs do not alter booking logic or rules.
 
@@ -54,11 +54,14 @@ The main process rejects concurrent generation, stale completions and unsupporte
 
 Context isolation, sandbox, Node-disabled renderer, main-frame sender checks, denied permissions/navigation/window opening and network-free design iframes. CSP blocks renderer network calls. No privileged preload inside previews. Export paths are fixed under userData; renderer never supplies output paths. The main app and provider are trusted code; no claim of complete security review is made.
 
-Design compilation is a constrained schema-to-interface step; freeform code generation and image-input generation are not implemented. Synthetic regression checks now cover the reviewed protocol/UI/recovery/export paths. Run `npx playwright install chromium`, `npm run build`, then `npm test`. These checks do not establish real account access, actual OS credential encryption or native screen-reader acceptance. Builds are tracked separately from acceptance. No production changes, monitor restart, real customer data, posting or human acceptance.
+Design compilation is a constrained schema-to-interface step; freeform code generation is not implemented. Image inputs influence the constrained design specification. Synthetic regression checks now cover the reviewed protocol/UI/recovery/export paths. Run `npx playwright install chromium`, `npm run build`, then `npm test`. These checks do not establish real account access, actual OS credential encryption or native screen-reader acceptance. Builds are tracked separately from acceptance. No production changes, monitor restart, real customer data, posting or human acceptance.
 
 ## Canvas and interactive design
 The five screens can be arranged on a React Flow canvas, with pan/zoom and a screen-list fallback on mobile. Select a heading, subtitle or button to scope direct editing and AI refinement. Direct edits save a labelled version without an AI request. Undo/redo selects saved versions. Shared accent changes require All screens scope; screen-scoped AI changes preserve other components and shared tokens.
 
 AI results are proposals: review, Accept design or Discard proposal. The previous accepted version remains usable. A sandboxed interactive preview uses fixed trusted code and fictional treatment/contact/slot data; it creates no reservation and makes no network requests. Export includes `public/interactive-design.html`, generated from the same validated design, alongside the separate trusted booking-controller baseline. Its standalone design preview needs no account connection. It is a synthetic walkthrough, not a new production booking integration.
 
-Build and all 34 synthetic regression checks passed for the canvas phase (18 protocol, 15 browser/export, one recovery). Actual subscription inference remains unverified and recording it waits for user consent. The existing authored-sample video is not evidence of generation.
+Build and all 39 automated checks passed (18 protocol, 19 browser/export, one recovery, one recorder). A continuous real app recording now shows actual subscription generation, refinement, interactive preview and export. Authored-sample and earlier still-capture videos remain historical artifacts.
+
+## Record a demo
+Click **Record demo** in the personal Electron workspace. It hides the account identity and captures only this app window at two frames per second, for up to five minutes. Click **Stop demo recording** to write an owner-only recording manifest and numbered JPEG frames under the personal app recordings folder. No microphone, desktop or other apps are captured. Final video encoding is a separate local step. Do not open account-management dialogs or put sensitive content in the project while recording.
