@@ -1,0 +1,28 @@
+name: Design studio verification
+on:
+  pull_request:
+    paths: ['booking-design-studio/**', '.github/workflows/booking-design-studio.yml']
+  push:
+    branches: ['kindred-design-workflow']
+    paths: ['booking-design-studio/**', '.github/workflows/booking-design-studio.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  studio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: booking-design-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: booking-design-studio/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm test

@@ -1,0 +1,26 @@
+{
+  "name": "kindred-design-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "electron .",
+    "personal": "node launch-personal.mjs",
+    "preview": "node preview-server.mjs",
+    "test": "node tests/protocol.mjs && node tests/ui-export.mjs && node tests/recovery.mjs && node tests/recorder.cjs"
+  },
+  "dependencies": {
+    "@xyflow/react": "12.12.0",
+    "fflate": "0.8.3",
+    "jose": "6.2.12",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "electron": "44.5.1",
+    "esbuild": "0.28.2"
+  }
+}

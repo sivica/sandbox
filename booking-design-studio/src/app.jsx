@@ -1,0 +1,1167 @@
+import React, { useState, useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  screens,
+  styles,
+  sample,
+  example,
+  validateDesign,
+  screenHTML,
+  layoutOptions,
+  nestedRoles,
+  authoredPreset,
+  styleDirections,
+  refinementTargetAllowed,
+} from "./design.js";
+import { DesignCanvas } from "./canvas.jsx";
+import { bookingHTML } from "./interactive.js";
+import { exportZip } from "./export.js";
+const desktop = !!window.kindred;
+const key = "kindred-studio-project-v1";
+async function call(action, payload) {
+  if (desktop) {
+    const r = await window.kindred.call(action, payload);
+    if (r.error) {
+      const error = Error(r.error);
+      error.code = r.code;
+      error.connection = r.connection;
+      throw error;
+    }
+    return r;
+  }
+  if (action === "state") {
+    let project = null;
+    try {
+      project = JSON.parse(localStorage.getItem(key));
+    } catch {}
+    return {
+      configured: false,
+      session: { status: "disconnected", sharing: false },
+      project,
+      notice:
+        "Browser visual prototype. ChatGPT authorization requires the local desktop connection.",
+    };
+  }
+  if (action === "save") {
+    localStorage.setItem(key, JSON.stringify(payload));
+    return {};
+  }
+  if (action === "usage") {
+    window.open("https://chatgpt.com/settings/usage", "_blank", "noopener");
+    return {};
+  }
+  if (action === "export") {
+    const url = URL.createObjectURL(
+      new Blob([payload], { type: "application/zip" }),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "kindred-design.zip";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return {};
+  }
+  throw Error("ChatGPT connection is unavailable in this visual prototype.");
+}
+function App() {
+  const [page, setPage] = useState("welcome"),
+    [project, setProject] = useState({
+      name: "Treatment Booking",
+      draft: "",
+      style: "calm-spa",
+      versions: [],
+      selected: null,
+    }),
+    [recording, setRecording] = useState(false),
+    [recordingPending, setRecordingPending] = useState(false),
+    [recordingSavePending, setRecordingSavePending] = useState(false),
+    [referencePending, setReferencePending] = useState(false),
+    [ready, setReady] = useState(false),
+    [connection, setConnection] = useState({ configured: false, session: {} }),
+    [models, setModels] = useState([]),
+    [profiles, setProfiles] = useState([]),
+    [model, setModel] = useState(""),
+    [appearance, setAppearance] = useState("dark"),
+    [busy, setBusy] = useState(""),
+    [message, setMessage] = useState(""),
+    [error, setError] = useState(""),
+    [menu, setMenu] = useState(false),
+    [modal, setModal] = useState(null),
+    [scope, setScope] = useState("All screens"),
+    [reference, setReference] = useState(null),
+    [screen, setScreen] = useState(0),
+    [previewScreen, setPreviewScreen] = useState(0),
+    [previewSize, setPreviewSize] = useState("mobile"),
+    [view, setView] = useState("canvas"),
+    [element, setElement] = useState("action"),
+    [proposal, setProposal] = useState(null),
+    [proposalScreen, setProposalScreen] = useState(0),
+    [stylePreview, setStylePreview] = useState(null);
+  const menuButton = useRef(),
+    menuRoot = useRef(),
+    referenceInput = useRef(),
+    referenceRevision = useRef(0),
+    referenceReader = useRef(),
+    dialog = useRef(),
+    styleDialog = useRef(),
+    styleReturnFocus = useRef(),
+    returnFocus = useRef(),
+    sequence = useRef(0),
+    draftRevision = useRef(0),
+    saveQueue = useRef(Promise.resolve());
+  const savedSelection = project.versions.find(
+    (v) => v.manifest.id === project.selected,
+  );
+  const selected = savedSelection && { ...savedSelection, design: validateDesign(savedSelection.design) };
+  const compatibleTarget = refinementTargetAllowed(scope, element);
+  const usable =
+    connection.session?.sharing && models.some((m) => m.slug === model);
+  useEffect(() => {
+    call("state")
+      .then((r) => {
+        setConnection(r);
+        if (desktop && r.configured)
+          call("profiles")
+            .then((p) => setProfiles(p.profiles))
+            .catch(() => {});
+        if (r.session?.sharing) {
+          call("models")
+            .then((catalog) => {
+              setModels(catalog.models);
+              setModel(catalog.models[0]?.slug || "");
+              call("state").then(setConnection).catch(() => {});
+            })
+            .catch(async (e) => {
+              try {
+                const snapshot = e.connection || (await call("state"));
+                setConnection(snapshot);
+                if (!snapshot.session?.sharing) {
+                  setModels([]);
+                  setModel("");
+                }
+              } catch {}
+              setError(e.message);
+            });
+        }
+        if (r.project?.versions) {
+          try {
+            r.project.versions.forEach((v) => validateDesign(v.design));
+            setProject(r.project);
+          } catch {
+            setError("Saved project was invalid; starting a new draft.");
+          }
+        }
+        setReady(true);
+      })
+      .catch((e) => {
+        setError(e.message);
+        setReady(true);
+      });
+  }, []);
+  useEffect(() => {
+    if (ready) {
+      saveQueue.current = saveQueue.current
+        .then(() => call("save", project))
+        .catch((e) => setError("Could not save project: " + e.message));
+    }
+  }, [project, ready]);
+  useEffect(() => {
+    document.documentElement.dataset.appearance = appearance;
+  }, [appearance]);
+  const invalidateGeneration = () => {
+    sequence.current++;
+    setProposal(null);
+    call("cancel").catch(() => {});
+  };
+  const update = (patch) => {
+    if (Object.hasOwn(patch, "draft")) draftRevision.current++;
+    if (Object.hasOwn(patch, "selected")) invalidateGeneration();
+    setProject((p) => ({ ...p, ...patch, ...(Object.hasOwn(patch, "selected") ? { redo: [] } : {}) }));
+  };
+  async function refreshAccounts() {
+    const r = await call("state");
+    setConnection(r);
+    setModels([]);
+    setModel("");
+    if (desktop && r.configured) setProfiles((await call("profiles")).profiles);
+    if (r.session?.sharing) {
+      const catalog = await call("models");
+      setModels(catalog.models);
+      setModel(catalog.models[0]?.slug || "");
+    }
+    return r;
+  }
+  const closeMenu = () => {
+    setMenu(false);
+    menuButton.current?.focus();
+  };
+  useEffect(() => {
+    if (menu) menuRoot.current?.querySelector('[role="menuitem"]')?.focus();
+  }, [menu]);
+  useEffect(() => {
+    if (stylePreview) {
+      styleDialog.current?.showModal();
+      styleDialog.current?.querySelector("button")?.focus();
+    }
+    else styleReturnFocus.current?.focus();
+  }, [stylePreview]);
+  useEffect(() => {
+    if (modal) {
+      dialog.current?.showModal();
+      dialog.current?.querySelector("button,input")?.focus();
+    } else if (dialog.current?.open) {
+      dialog.current.close();
+      returnFocus.current?.focus();
+    }
+  }, [modal]);
+  useEffect(() => {
+    const handler = (e) => {
+      if (
+        menu &&
+        !menuRoot.current?.contains(e.target) &&
+        !menuButton.current?.contains(e.target)
+      )
+        closeMenu();
+    };
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [menu]);
+  async function run(label, fn) {
+    setError("");
+    setMessage("");
+    setBusy(label);
+    try {
+      await fn();
+    } catch (e) {
+      try {
+        const snapshot = e.connection || (await call("state"));
+        setConnection(snapshot);
+        if (!snapshot.session?.sharing) {
+          setModels([]);
+          setModel("");
+        }
+      } catch {}
+      setError(e.message);
+    } finally {
+      setBusy("");
+    }
+  }
+  async function connect(newProfile = false) {
+    sequence.current++;
+    await run("Opening ChatGPT…", async () => {
+      const r = await call("connect", {
+        newProfile,
+        profileId: newProfile ? undefined : connection.session?.profileId,
+        reconsent:
+          connection.session?.status === "connected" &&
+          !connection.session?.sharing,
+      });
+      if (desktop) setProfiles((await call("profiles")).profiles);
+      setConnection(r);
+      if (r.session.sharing) {
+        const catalog = await call("models");
+        setModels(catalog.models);
+        setModel(catalog.models[0]?.slug || "");
+        setPage("workspace");
+        setMessage("Connected. First generation will verify inference access.");
+      } else
+        setMessage(
+          "Signed in without permission to use your plan. Reconnect to grant access.",
+        );
+    });
+  }
+  function openModal(type, event, index = screen) {
+    returnFocus.current = event?.currentTarget || menuButton.current;
+    setPreviewScreen(index);
+    closeMenu();
+    setModal(type);
+  }
+  function accept(design, source, parent = null, submittedRevision = null, metadata = {}) {
+    if (source === "sample") invalidateGeneration();
+    setError("");
+    const id = crypto.randomUUID();
+    const version = {
+      design,
+      manifest: {
+        id,
+        parent,
+        scope: metadata.scope || scope,
+        source,
+        ...(metadata.provenance ? { provenance: metadata.provenance } : {}),
+        validation: "validated schema and trusted preview templates",
+        component: Object.hasOwn(metadata, "component") ? metadata.component : element,
+        ...(metadata.fields ? { fields: metadata.fields } : {}),
+        sourceBaseline: "6038e4faceb4427af8f1256a691934431af908d0",
+        createdAt: new Date().toISOString(),
+        validatedFiles: [
+          "design-specification.json",
+          "public/interactive-design.html",
+          "public/designs/screen-1.html",
+          "public/designs/screen-2.html",
+          "public/designs/screen-3.html",
+          "public/designs/screen-4.html",
+          "public/designs/screen-5.html",
+        ],
+      },
+    };
+    setProject((p) => ({
+      ...p,
+      versions: [...p.versions, version].slice(-20),
+      selected: id,
+      ...(source === "authored-preset" ? { style: design.style } : {}),
+      redo: [],
+      draft:
+        source === "sample" || submittedRevision === draftRevision.current
+          ? ""
+          : p.draft,
+    }));
+    setMessage(
+      source === "sample"
+        ? "Loaded an authored sample. No AI request was made."
+        : source === "authored-preset"
+          ? "Accepted a local authored preset. No AI request was made."
+        : source === "manual"
+          ? "Saved direct edit as a new version. No AI request was made."
+          : "Generation completed and specification validated.",
+    );
+  }
+  async function generate() {
+    if (!refinementTargetAllowed(scope, element)) {
+      setError("This component is not editable on the requested screen. Choose a compatible scope or use the selected screen scope.");
+      return;
+    }
+    const operation = ++sequence.current;
+    const submittedRevision = draftRevision.current;
+    await run("Generating designs…", async () => {
+      const r = await call("generate", {
+        prompt: project.draft,
+        style: project.style,
+        scope,
+        previous: selected?.design,
+        component: scope === "All screens" ? null : element,
+        model,
+        reference: reference?.url,
+      });
+      if (operation !== sequence.current) return;
+      if (r.connection) setConnection(r.connection);
+      let text = r.text.trim();
+      text = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      const raw = JSON.parse(text);
+      if (selected && scope !== "All screens" && Object.hasOwn(nestedRoles[screens.indexOf(scope)], element) && !Object.hasOwn(raw.screens?.[screens.indexOf(scope)] || {}, element)) throw Error("The model omitted the selected text role. Please retry.");
+      let d = validateDesign(raw);
+      if (selected && scope !== "All screens") {
+        const i = screens.indexOf(scope);
+        d = {
+          ...selected.design,
+          screens: selected.design.screens.map((s, n) =>
+            n === i
+              ? {
+                  ...s,
+                  [element]: d.screens[n][element],
+                  ...(element === "action"
+                    ? { actionPadding: d.screens[n].actionPadding }
+                    : {}),
+                }
+              : s,
+          ),
+        };
+      } // No executable model output is accepted.
+      for (let i = 0; i < 5; i++) screenHTML(d, i);
+      setProposalScreen(scope === "All screens" ? 0 : screens.indexOf(scope));
+      setProposal({
+        design: d,
+        scope,
+        component: scope === "All screens" ? null : element,
+        fields: scope === "All screens" ? ["screens", "tokens"] : [element, ...(element === "action" ? ["actionPadding"] : [])].filter(key => d.screens[screens.indexOf(scope)][key] !== selected?.design.screens[screens.indexOf(scope)][key]),
+        parent: selected?.manifest.id || null,
+        submittedRevision,
+        operation,
+      });
+      setMessage(
+        "Generation completed and specification validated. Review and accept the proposed design.",
+      );
+    });
+  }
+  async function exportCurrent() {
+    await run("Exporting…", async () => {
+      const bytes = exportZip(selected);
+      const r = await call("export", bytes);
+      setMessage(
+        r.path
+          ? "Export saved: " + r.path
+          : "ZIP downloaded. The accepted interactive design and separate booking baseline are included.",
+      );
+    });
+  }
+  function menuKeys(e) {
+    const list = [...menuRoot.current.querySelectorAll('[role="menuitem"]')];
+    let index = list.indexOf(document.activeElement);
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeMenu();
+    } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault();
+      index =
+        e.key === "Home"
+          ? 0
+          : e.key === "End"
+            ? list.length - 1
+            : (index + (e.key === "ArrowDown" ? 1 : -1) + list.length) %
+              list.length;
+      list[index]?.focus();
+    } else if (e.key === "Tab") setMenu(false);
+  }
+  const composer = (
+    <section className="composer">
+      <label htmlFor="brief">
+        {selected
+          ? "What changes would you like to make?"
+          : "What would you like to design?"}
+      </label>
+      <textarea
+        id="brief"
+        maxLength={12000}
+        value={project.draft}
+        onChange={(e) => update({ draft: e.target.value })}
+        placeholder={
+          selected
+            ? "Make the booking button more prominent…"
+            : "Describe your app, its users, screens and visual style…"
+        }
+        rows={4}
+      />
+      <div className="composer-tools">
+        <label className="attachment">
+          ＋ Reference
+          <input
+            ref={referenceInput}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={(e) => {
+              const revision = ++referenceRevision.current;
+              referenceReader.current?.abort();
+              invalidateGeneration();
+              setReference(null);
+              setReferencePending(false);
+              const file = e.target.files[0];
+              if (!file) return;
+              if (file.size > 4 * 1024 * 1024) { setError("Reference limit: 4 MB."); return; }
+              setReferencePending(true);
+              const reader = new FileReader();
+              referenceReader.current = reader;
+              const current = () => revision === referenceRevision.current;
+              const fail = () => { if (current()) { setReferencePending(false); setError("Invalid reference image."); } };
+              reader.onerror = fail;
+              reader.onload = () => {
+                if (!current()) return;
+                const img = new Image();
+                img.onload = () => {
+                  if (!current()) return;
+                  try {
+                    const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+                    const canvas = document.createElement("canvas");
+                    canvas.width = Math.max(1, Math.round(img.width * scale));
+                    canvas.height = Math.max(1, Math.round(img.height * scale));
+                    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                    setReference({ name: file.name, url: canvas.toDataURL("image/jpeg", 0.85) });
+                    setReferencePending(false);
+                  } catch { fail(); }
+                };
+                img.onerror = fail;
+                img.src = reader.result;
+              };
+              reader.readAsDataURL(file);
+            }}
+          />
+        </label>
+        <label className="compact">
+          Design style
+          <select
+            aria-label="Design style"
+            value={project.style}
+            onChange={(e) => update({ style: e.target.value })}
+          >
+            {Object.entries(styles).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
+        {selected && (
+          <label className="compact">
+            Change scope
+            <select
+              value={scope}
+              onChange={(e) => {
+                invalidateGeneration();
+                setScope(e.target.value);
+              }}
+            >
+              {["All screens", ...screens].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+        )}
+        <button
+          className="primary generate"
+          disabled={
+            referencePending ||
+            !compatibleTarget ||
+            !usable ||
+            !project.draft.trim() ||
+            !!busy ||
+            !!proposal
+          }
+          onClick={generate}
+        >
+          {selected ? "Apply changes" : "Generate designs"} ↗
+        </button>
+      </div>
+      {selected && !compatibleTarget && <div role="status" className="scope-warning">
+        <p>The selected {element} role is not editable on {scope}. Choose a compatible Change scope value.</p>
+        <button onClick={() => { invalidateGeneration(); setScope(screens[screen]); }}>Use selected screen scope</button>
+      </div>}
+      {(reference || referencePending) && (
+        <div className="reference">
+          <img alt="Attached design reference" src={reference?.url} />
+          <span>
+            {reference?.name || "Preparing reference…"}
+            <br />
+            This reference will be sent to OpenAI with your next request. Use fictional, non-sensitive designs. Images are not saved in the project.
+          </span>
+          <button onClick={() => { ++referenceRevision.current; referenceReader.current?.abort(); invalidateGeneration(); setReference(null); setReferencePending(false); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove reference</button>
+        </div>
+      )}
+      <small>
+        Reference inputs require an image-capable account model.
+        Uses your ChatGPT allowance. No separate AI credits. Disable account
+        credit usage for allowance-only requests.
+      </small>
+    </section>
+  );
+  return (
+    <div className={recording ? "app demo-recording" : "app"}>
+      <header>
+        <button disabled={recording} className="wordmark" onClick={() => setPage("welcome")}>
+          ◌ KINDRED <span>Design Studio</span>
+        </button>
+        {page === "workspace" && (
+          <div className="header-actions">
+            {desktop && <button disabled={recordingPending} onClick={async () => {
+              setRecordingPending(true);
+              try {
+                if (recording) {
+                  const result = await call("stopRecording");
+                  setRecording(result.recording === true);
+                  setRecordingSavePending(!!result.saveError);
+                  if (result.saveError) setError(result.saveError + " Frames retained: " + result.directory);
+                  else setMessage("App-window recording saved: " + result.directory);
+                } else if (recordingSavePending) {
+                  const result = await call("retryRecording");
+                  setRecordingSavePending(!!result.saveError);
+                  if (result.saveError) setError(result.saveError + " Frames retained: " + result.directory);
+                  else { setError(""); setMessage("Recording saved: " + result.directory); }
+                } else {
+                  setRecording(true);
+                  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                  await call("startRecording");
+                }
+              } catch (e) { if (!recording) setRecording(false); setError(e.message); } finally { setRecordingPending(false); }
+            }}>{recording ? "Stop demo recording" : recordingSavePending ? "Retry recording save" : "Record demo"}</button>}
+            <label className="compact">
+              Appearance
+              <select
+                value={appearance}
+                onChange={(e) => setAppearance(e.target.value)}
+              >
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="system">System</option>
+              </select>
+            </label>
+            <button
+              ref={menuButton}
+              aria-label="More project actions"
+              aria-haspopup="menu"
+              aria-expanded={menu}
+              onClick={() => setMenu(!menu)}
+            >
+              ⋮
+            </button>
+            {menu && (
+              <div
+                className="menu"
+                ref={menuRoot}
+                role="menu"
+                onKeyDown={menuKeys}
+              >
+                <button role="menuitem" onClick={(e) => openModal("rename", e)}>
+                  Rename project
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    closeMenu();
+                    document.querySelector("#brief")?.focus();
+                    setMessage(
+                      "Choose Design style below, then explicitly apply changes.",
+                    );
+                  }}
+                >
+                  Design style
+                </button>
+                <button
+                  role="menuitem"
+                  disabled={!selected}
+                  onClick={(e) => openModal("preview", e)}
+                >
+                  Open preview
+                </button>
+                <button
+                  role="menuitem"
+                  disabled={!selected || !!busy}
+                  onClick={() => {
+                    closeMenu();
+                    exportCurrent();
+                  }}
+                >
+                  Export code
+                </button>
+                <button
+                  role="menuitem"
+                  disabled={recording}
+                  onClick={() => {
+                    closeMenu();
+                    call("usage").catch((e) => setError(e.message));
+                  }}
+                >
+                  Manage ChatGPT usage
+                </button>
+                <button
+                  role="menuitem"
+                  disabled={recording}
+                  onClick={() => {
+                    closeMenu();
+                    openModal("accounts");
+                    refreshAccounts().catch((e) => setError(e.message));
+                  }}
+                >
+                  Switch account
+                </button>
+                <button
+                  role="menuitem"
+                  disabled={recording}
+                  onClick={() => {
+                    closeMenu();
+                    sequence.current++;
+                    call("cancel");
+                    run("Disconnecting…", async () => {
+                      try {
+                        await call("disconnect");
+                      } finally {
+                        setConnection(await call("state"));
+                        setModels([]);
+                        setModel("");
+                      }
+                    });
+                  }}
+                >
+                  Disconnect
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </header>
+      <main>
+        {page === "welcome" ? (
+          <section className="welcome">
+            <button className="back" onClick={() => setPage("workspace")}>
+              ← Open local workspace
+            </button>
+            <div className="brand-mark">◌</div>
+            <p className="eyebrow">FROM A BRIEF TO A BOOKING DESIGN</p>
+            <h1>
+              Design your treatment
+              <br />
+              booking app
+            </h1>
+            <p className="lead">
+              Use your existing eligible ChatGPT subscription to create designs
+              you can export and build.
+            </p>
+            <button
+              className="continue"
+              disabled={!!busy}
+              onClick={() => connect()}
+            >
+              Continue with ChatGPT →
+            </button>
+            {busy === "Opening ChatGPT…" && (
+              <button onClick={() => call("cancelConnect")}>
+                Cancel sign-in
+              </button>
+            )}
+            <p className="fine">
+              Requires an eligible plan and permission to use it.
+              <br />
+              Generation counts toward your plan limits.
+            </p>
+            <div className="local-notice">
+              {connection.personal
+                ? "Personal, local-only tool. Continue with ChatGPT to sign in and grant plan access."
+                : "Connection pending: a licensed provider must be configured."}
+              <br />
+              {connection.personal
+                ? "Credentials stay encrypted on this Mac. Use fictional design briefs."
+                : "Explore the authored samples in the local workspace."}
+            </div>
+          </section>
+        ) : (
+          <>
+            <div className="project-header">
+              <div>
+                <p className="eyebrow">YOUR DESIGN WORKSPACE</p>
+                <h1>{selected ? project.name : "Start designing your app"}</h1>
+              </div>
+              <div className="connection-pill">
+                {!recording && connection.session?.identity?.email && (
+                  <span>
+                    {connection.session.identity.name || "ChatGPT account"} ·{" "}
+                    {connection.session.identity.email} ·{" "}
+                    {connection.session.profileId?.slice(0, 8)}
+                  </span>
+                )}
+                {connection.session?.sharing
+                  ? "Using ChatGPT plan"
+                  : "Local prototype · not connected"}
+                {!recording && connection.session?.lifecycle?.renewedAt && <small>Session renewed: {connection.session.lifecycle.renewedAt}</small>}
+                {!recording && connection.session?.lifecycle?.revokedAt && <small>Session revoked: {connection.session.lifecycle.revokedAt}</small>}
+                <button
+                  disabled={recording}
+                  onClick={() =>
+                    connection.session?.sharing ? call("usage") : connect()
+                  }
+                >
+                  {connection.session?.sharing ? "Manage usage" : "Connect"}
+                </button>
+              </div>
+            </div>
+            {connection.session?.sharing && (
+              <label className="compact model">
+                Account model
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                >
+                  {models.map((m) => (
+                    <option value={m.slug} key={m.slug}>
+                      {m.displayName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {selected && (
+              <>
+                <div className="result-heading">
+                  <p>
+                    {["sample", "authored-preset"].includes(selected.manifest.source)
+                      ? "Authored sample · no AI generation"
+                      : selected.manifest.source === "manual"
+                        ? "Direct edit · no AI generation"
+                        : "ChatGPT design specification"}{" "}
+                    · five screens
+                  </p>
+                  <label className="compact">
+                    Version
+                    <select
+                      value={project.selected}
+                      onChange={(e) => update({ selected: e.target.value })}
+                    >
+                      {project.versions.map((v, i) => (
+                        <option key={v.manifest.id} value={v.manifest.id}>
+                          Version {i + 1} · {v.manifest.source}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="canvas-toolbar">
+                  <button
+                    onClick={() =>
+                      setView(view === "canvas" ? "list" : "canvas")
+                    }
+                  >
+                    {view === "canvas" ? "Show screen list" : "Show canvas"}
+                  </button>
+                  <button
+                    disabled={!project.versions.some(v => v.manifest.id === selected.manifest.parent)}
+                    onClick={() => {
+                      invalidateGeneration();
+                      setProject(p => ({ ...p, selected: selected.manifest.parent, redo: [...(p.redo || []), selected.manifest.id] }));
+                    }}
+                  >Undo</button>
+                  <button
+                    disabled={!project.versions.some(v => v.manifest.id === project.redo?.at(-1) && v.manifest.parent === project.selected)}
+                    onClick={() => {
+                      invalidateGeneration();
+                      setProject(p => ({ ...p, selected: p.redo.at(-1), redo: p.redo.slice(0, -1) }));
+                    }}
+                  >Redo</button>
+                  <button onClick={(e) => openModal("preview", e, 0)}>
+                    Interactive preview
+                  </button>
+                </div>
+                {view === "canvas" && (
+                  <DesignCanvas
+                    version={selected}
+                    layout={project.layout || {}}
+                    selectedScreen={screen}
+                    element={element}
+                    onLayout={(layout) => update({ layout })}
+                    onSelect={(i, key) => {
+                      invalidateGeneration();
+                      setScreen(i);
+                      setElement(key);
+                      setScope(screens[i]);
+                    }}
+                  />
+                )}
+                <section
+                  className="element-editor"
+                  aria-label="Selected element editor"
+                >
+                  <h2>
+                    Edit {screens[screen]} · {element}
+                  </h2>
+                  <label className="layout-inspector">
+                    Screen layout
+                    <select aria-label="Screen layout" value={selected.design.screens[screen].layout} disabled={!!busy}
+                      onChange={e => {
+                        invalidateGeneration();
+                        const d = structuredClone(selected.design);
+                        d.screens[screen].layout = e.target.value;
+                        accept(validateDesign(d), "manual", selected.manifest.id, null, { scope: screens[screen], component: "layout", fields: ["layout"] });
+                      }}>
+                      {Object.entries(layoutOptions[screen]).map(([id, label]) => <option value={id} key={id}>{label}</option>)}
+                    </select>
+                  </label>
+                  <div className="nested-role-controls" aria-label="Component text roles">
+                    {Object.entries(nestedRoles[screen]).map(([key, label]) => <button key={key} aria-pressed={element === key} onClick={() => { invalidateGeneration(); setElement(key); setScope(screens[screen]); }}>{label}</button>)}
+                  </div>
+                  <form
+                    key={selected.manifest.id + screen + element}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      invalidateGeneration();
+                      const f = new FormData(e.currentTarget),
+                        d = structuredClone(selected.design);
+                      d.screens[screen][element] = String(f.get("copy"));
+                      if (element === "action") d.screens[screen].actionPadding = Number(f.get("padding"));
+                      if (scope === "All screens")
+                        d.tokens.accent = String(f.get("accent"));
+                      const sharedChanged = d.tokens.accent !== selected.design.tokens.accent;
+                      const fields = [element, ...(element === "action" ? ["actionPadding"] : [])].filter(key => d.screens[screen][key] !== selected.design.screens[screen][key]);
+                      if (sharedChanged) fields.push("tokens.accent");
+                      accept(validateDesign(d), "manual", selected.manifest.id, null, { scope: sharedChanged ? "All screens" : screens[screen], component: element, fields });
+                    }}
+                  >
+                    <label>
+                      Selected element text
+                      <input
+                        name="copy"
+                        defaultValue={selected.design.screens[screen][element]}
+                        maxLength={180}
+                        required
+                      />
+                    </label>
+                    {element === "action" && <label>
+                      Button padding
+                      <input
+                        name="padding"
+                        type="number"
+                        min="12"
+                        max="28"
+                        defaultValue={
+                          selected.design.screens[screen].actionPadding || 17
+                        }
+                      />
+                    </label>}
+                    <label>
+                      Shared accent (All screens scope)
+                      <input
+                        name="accent"
+                        type="color"
+                        disabled={scope !== "All screens"}
+                        defaultValue={selected.design.tokens.accent}
+                      />
+                    </label>
+                    <button disabled={!!busy}>Save direct edit</button>
+                  </form>
+                </section>
+                <div
+                  className={
+                    view === "canvas" ? "gallery mobile-screen-list" : "gallery"
+                  }
+                >
+                  {screens.map((label, i) => (
+                    <div className="screen-list-item" key={label}>
+                      <button
+                        className="design-card"
+                        aria-label={"Preview " + label}
+                        onClick={(e) => openModal("preview", e, i)}
+                      >
+                        <span>{label}</span>
+                        <iframe
+                          sandbox=""
+                          tabIndex={-1}
+                          title={label + " design"}
+                          srcDoc={screenHTML(selected.design, i)}
+                        />
+                        <span className="card-action">Open preview ↗</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          invalidateGeneration();
+                          setScreen(i);
+                          setElement("action");
+                          setScope(screens[i]);
+                        }}
+                      >
+                        Select {label} button
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            {proposal && (
+              <section className="proposal" aria-label="Proposed design">
+                <h2>Review proposed design</h2>
+                <p>
+                  Scope: {proposal.scope} · accept creates a new version. Your current
+                  design stays available.
+                </p>
+                <label>
+                  Proposed screen
+                  <select aria-label="Proposed screen" value={proposalScreen} onChange={e => setProposalScreen(Number(e.target.value))}>
+                    {screens.map((name, i) => <option value={i} key={name}>{name}</option>)}
+                  </select>
+                </label>
+                <iframe
+                  sandbox=""
+                  title="Proposed design preview"
+                  srcDoc={screenHTML(proposal.design, proposalScreen)}
+                />
+                <button
+                  onClick={() => {
+                    if (proposal.operation !== sequence.current) {
+                      setProposal(null);
+                      return;
+                    }
+                    accept(
+                      proposal.design,
+                      proposal.source || "chatgpt",
+                      proposal.parent,
+                      proposal.submittedRevision,
+                      { scope: proposal.scope, component: proposal.component, fields: proposal.fields, ...(proposal.provenance ? { provenance: proposal.provenance } : {}) },
+                    );
+                    setProposal(null);
+                  }}
+                >
+                  Accept design
+                </button>
+                <button onClick={() => setProposal(null)}>
+                  Discard proposal
+                </button>
+              </section>
+            )}
+            {composer}
+            <section className="inspiration">
+              <div className="section-label">
+                ✦{" "}
+                {selected ? "Try another authored sample" : "Need inspiration?"}
+              </div>
+              <div className="inspiration-grid">
+                {Object.entries(styles).map(([k, v]) => (
+                  <div className={"inspiration-card " + k} key={k}>
+                    <h2>{v} booking</h2>
+                    <p>{styleDirections[k]}</p>
+                    <div className="preset-thumbnails">
+                      {[0, 1].map(i => <div className="preset-thumb" key={i}><iframe sandbox="" tabIndex={-1} title={v + " " + screens[i] + " thumbnail"} srcDoc={screenHTML(authoredPreset(k), i)} /></div>)}
+                    </div>
+                    <button onClick={e => { styleReturnFocus.current = e.currentTarget; setStylePreview(k); }}>Preview {v}</button>
+                    <button
+                      onClick={() => {
+                        update({
+                          draft: example.replace("calm", v.toLowerCase()),
+                          style: k,
+                        });
+                        setMessage("Prompt filled. Edit it before generating.");
+                      }}
+                    >
+                      Use this prompt
+                    </button>
+                    <button
+                      onClick={() => {
+                        invalidateGeneration();
+                        setProposalScreen(0);
+                        setProposal({ design: authoredPreset(k), scope: "All screens", component: null, fields: ["screens", "tokens"], parent: selected?.manifest.id || null, operation: sequence.current, source: "authored-preset", provenance: { type: "local-authored", id: k, revision: 1 } });
+                        setMessage("Authored style staged. Review all five screens, then accept or discard. No AI request was made.");
+                      }}
+                    >
+                      Apply {v} style
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+        <div role="status" aria-live="polite" className="status">
+          {busy || message}
+        </div>
+        {busy === "Generating designs…" && (
+          <button
+            onClick={() => {
+              sequence.current++;
+              call("cancel");
+              setMessage("Cancelled. Previous version retained.");
+            }}
+          >
+            Cancel generation
+          </button>
+        )}
+        <div role="alert" className="error">
+          {error}
+        </div>
+      </main>
+      <footer>
+        {connection.personal
+          ? "Personal local design tool · synthetic bookings · uses your authorized ChatGPT allowance"
+          : "Local design prototype · synthetic bookings · connection pending licensing/eligibility"}
+      </footer>
+      {stylePreview && <dialog ref={styleDialog} className="style-preview-overlay" aria-label="Authored style preview" onCancel={e => { e.preventDefault(); setStylePreview(null); }}>
+        <button autoFocus onClick={() => setStylePreview(null)}>Close style preview</button>
+        <h2>{styles[stylePreview]}</h2><p>{styleDirections[stylePreview]}</p>
+        <div className="style-preview-screens">{[0, 1].map(i => <iframe key={i} sandbox="" tabIndex={-1} title={screens[i] + " authored style preview"} srcDoc={screenHTML(authoredPreset(stylePreview), i)} />)}</div>
+      </dialog>}
+      <dialog
+        ref={dialog}
+        aria-labelledby="studio-dialog-title"
+        onCancel={(e) => {
+          e.preventDefault();
+          setModal(null);
+        }}
+      >
+        <div className="dialog-head">
+          <h2 id="studio-dialog-title">
+            {modal === "rename"
+              ? "Rename project"
+              : modal === "accounts"
+                ? "ChatGPT accounts"
+                : "Design preview"}
+          </h2>
+          <button aria-label="Close dialog" onClick={() => setModal(null)}>
+            ✕
+          </button>
+        </div>
+        {modal === "accounts" ? (
+          <div>
+            {profiles.map((p) => (
+              <button
+                key={p.id}
+                disabled={!!busy}
+                onClick={() => {
+                  invalidateGeneration();
+                  run("Selecting account…", async () => {
+                    await call("selectProfile", { id: p.id });
+                    await refreshAccounts();
+                    setModal(null);
+                  });
+                }}
+              >
+                {p.identity.email || p.identity.name || p.label} ·{" "}
+                {p.id.slice(0, 8)} · {p.status}
+                {p.id === connection.session?.profileId ? " · active" : ""}
+              </button>
+            ))}
+            <button
+              disabled={!!busy}
+              onClick={() => {
+                setModal(null);
+                connect(true);
+              }}
+            >
+              Add account
+            </button>
+          </div>
+        ) : modal === "rename" ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = new FormData(e.currentTarget).get("name").trim();
+              if (name) update({ name });
+              setModal(null);
+            }}
+          >
+            <label>
+              Project name
+              <input
+                name="name"
+                defaultValue={project.name}
+                required
+                maxLength={100}
+              />
+            </label>
+            <button className="primary">Save name</button>
+          </form>
+        ) : (
+          modal === "preview" && selected && (
+            <>
+              <div className="preview-controls">
+                <label>
+                  Screen
+                  <select
+                    value={previewScreen}
+                    onChange={(e) => setPreviewScreen(Number(e.target.value))}
+                  >
+                    {screens.map((s, i) => (
+                      <option value={i} key={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Size
+                  <select
+                    value={previewSize}
+                    onChange={(e) => setPreviewSize(e.target.value)}
+                  >
+                    <option value="mobile">Mobile</option>
+                    <option value="desktop">Desktop</option>
+                  </select>
+                </label>
+              </div>
+              <p className="fine">
+                Interactive synthetic walkthrough · no real reservation or
+                calendar access.
+              </p>
+              <iframe
+                className={"large-preview " + previewSize}
+                sandbox="allow-scripts"
+                title={screens[previewScreen] + " enlarged design"}
+                srcDoc={bookingHTML(selected.design, previewScreen)}
+              />
+            </>
+          )
+        )}
+      </dialog>
+    </div>
+  );
+}
+createRoot(document.getElementById("root")).render(<App />);
