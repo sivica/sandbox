@@ -2,6 +2,10 @@
 
 Local Electron/React prototype for the three reviewed screens. Browser preview is a visual sandbox, not a ChatGPT connection.
 
+## Latest design improvements
+
+Trusted layout variants, nested copy edits and an offline visual style picker are implemented. Apply stages a proposal; accept or discard before replacing the selected design. See [DESIGN-BATCH.md](DESIGN-BATCH.md) for coverage and Review handoff.
+
 ## Run
 
 Node 22+ and macOS: `npm ci`, `npm run build`, `npm start`. For the browser visual prototype: `npm run preview`, then http://127.0.0.1:4190.

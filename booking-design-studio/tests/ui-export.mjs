@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import http from "node:http";
 import { build } from "esbuild";
 import { chromium } from "@playwright/test";
-import { sample, validateDesign, screenHTML } from "../src/design.js";
+import { sample, validateDesign, screenHTML, authoredPreset, palettes } from "../src/design.js";
 
 const root = new URL("../", import.meta.url).pathname;
 const base = await mkdtemp(
@@ -182,7 +182,7 @@ try {
         else originalRead.call(this, file);
       };
       window.reviewCalls = [];
-      window.reviewSaved = null;
+      window.reviewSaved = JSON.parse(sessionStorage.getItem("sg-persist") || "null");
       window.kindred = {
         call: async (action, payload) => {
           window.reviewCalls.push(action);
@@ -220,6 +220,7 @@ try {
             };
           if (action === "save") {
             window.reviewSaved = payload;
+            if (window.reviewPersist) sessionStorage.setItem("sg-persist",JSON.stringify(payload));
             return {};
           }
           if (action === "startRecording") return { recording: true };
@@ -230,7 +231,7 @@ try {
             if (window.reviewLimit) return { error: "ChatGPT usage limit reached. Try again after reset." };
             return await new Promise((resolve) => {
               window.reviewComplete = () =>
-                resolve({ text: JSON.stringify(design) });
+                resolve({ text: JSON.stringify(window.reviewDesign || design) });
             });
           }
           if (action === "cancel" || action === "usage" || action === "export")
@@ -245,9 +246,10 @@ try {
     await page.goto(origin);
     await page.getByRole("button", { name: "← Open local workspace" }).click();
     await page
-      .getByRole("button", { name: "Load sample", exact: true })
+      .getByRole("button", { name: "Apply Calm spa style", exact: true })
       .first()
       .click();
+    await page.getByRole("button", { name: "Accept design", exact: true }).click();
     await page
       .getByRole("button", { name: "Show screen list", exact: true })
       .click();
@@ -282,9 +284,9 @@ try {
       await page.getByRole("button", { name: "Apply changes" }).click();
       await page.waitForFunction(() => !!window.reviewComplete);
       await page
-        .getByRole("button", { name: "Load sample", exact: true })
-        .nth(2)
+        .getByRole("button", { name: "Apply Modern boutique style", exact: true })
         .click();
+      await page.getByRole("button", { name: "Accept design", exact: true }).click();
       await page.evaluate(() => window.reviewComplete());
       await page.getByRole("button", { name: "Apply changes" }).waitFor();
       await page.waitForFunction(
@@ -294,7 +296,7 @@ try {
       );
       const state = await page.evaluate(() => window.reviewSaved);
       const v = state.versions.find((v) => v.manifest.id === state.selected);
-      assert.equal(v.manifest.source, "sample");
+      assert.equal(v.manifest.source, "authored-preset");
       assert.equal(v.design.style, "modern-boutique");
     },
   );
@@ -702,6 +704,204 @@ try {
     await exportContext.close();
     await new Promise((r) => exportServer.close(r));
   }
+
+  await check("SG-001 legacy defaults and invalid layouts", async () => {
+    const legacy = validateDesign(sample("calm-spa"));
+    assert.deepEqual(legacy.screens.map(s => s.layout), ["card","card","card","card","card"]);
+    for (const bad of ["unknown", "<script>", 7]) {
+      const d = structuredClone(legacy); d.screens[0].layout = bad;
+      assert.throws(() => validateDesign(d));
+    }
+    const d = structuredClone(legacy); d.screens[2].layout = "hero";
+    assert.throws(() => validateDesign(d));
+    const card = structuredClone(legacy), hero = structuredClone(legacy), list = structuredClone(legacy);
+    hero.screens[0].layout = "hero"; list.screens[0].layout = "list";
+    assert.deepEqual(hero.tokens,card.tokens); assert.deepEqual(list.tokens,card.tokens);
+    assert.ok(screenHTML(card,0).includes('class="card"'));
+    assert.ok(screenHTML(hero,0).includes('class="quiet-orbit"'));
+    assert.ok(screenHTML(list,0).includes('class="list-marker"'));
+    const luminance = hex => { const a = hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4); return a[0]*.2126+a[1]*.7152+a[2]*.0722; };
+    const contrast = (a,b) => {const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+    for (const t of Object.values(palettes)) {
+      for (const bg of [t.paper,t.soft]) {
+        assert.ok(contrast(t.ink,bg)>=4.5); assert.ok(contrast(t.muted,bg)>=4.5);
+        assert.ok(contrast(t.accent,bg)>=3);
+      }
+      assert.ok(contrast("#ffffff",t.accent)>=4.5);
+    }
+  });
+  await check("SG-001 inspector changes only composition and supports Undo/Redo", async () => {
+    await workspace();
+    const before = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    await page.getByLabel("Screen layout", {exact:true}).selectOption("list");
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).design.screens[0].layout === "list");
+    const after = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    const expected = structuredClone(before.design); expected.screens[0].layout = "list";
+    assert.deepEqual(after.design, expected);
+    assert.deepEqual(after.manifest.fields, ["layout"]);
+    assert.equal(after.manifest.scope, "Service selection");
+    await page.getByRole("button", {name:"Undo", exact:true}).click();
+    assert.equal(await page.getByLabel("Screen layout", {exact:true}).inputValue(), "hero");
+    await page.getByRole("button", {name:"Redo", exact:true}).click();
+    assert.equal(await page.getByLabel("Screen layout", {exact:true}).inputValue(), "list");
+    await page.getByRole("button", {name:"Select Treatment details button", exact:true}).click();
+    await page.getByLabel("Screen layout", {exact:true}).selectOption("card");
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).design.screens[1].layout === "card");
+    const detail = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    assert.deepEqual(detail.manifest.fields, ["layout"]);
+    assert.equal(detail.manifest.scope, "Treatment details");
+  });
+  await check("SG-002 nested direct edits isolate roles, escape text and export exact metadata", async () => {
+    await workspace();
+    const before = await page.evaluate(() => window.reviewSaved.versions.at(-1).design);
+    await page.getByRole("button", {name:"Service eyebrow", exact:true}).click();
+    await page.getByLabel("Selected element text").fill("CALM & CARE");
+    await page.getByRole("button", {name:"Save direct edit", exact:true}).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).design.screens[0].eyebrow === "CALM & CARE");
+    await page.getByRole("button", {name:"Service description", exact:true}).click();
+    const copy = '<img src=x onerror="window.bad=true"> & gentle';
+    await page.getByLabel("Selected element text").fill(copy);
+    await page.getByRole("button", {name:"Save direct edit", exact:true}).click();
+    await page.waitForFunction(copy => window.reviewSaved.versions.at(-1).design.screens[0].description === copy, copy);
+    const version = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    const expected = structuredClone(before); expected.screens[0].eyebrow = "CALM & CARE"; expected.screens[0].description = copy;
+    assert.deepEqual(version.design, expected);
+    assert.deepEqual(version.manifest.fields, ["description"]);
+    assert.equal(version.manifest.component, "description");
+    const files = unzipSync(exportZip(version));
+    const html = new TextDecoder().decode(files["public/designs/screen-1.html"]);
+    assert.ok(html.includes("&lt;img")); assert.ok(!html.includes("<img src=x"));
+    assert.ok(html.includes("Demo Relaxation")); assert.ok(html.includes("MKD 1,400"));
+    assert.deepEqual(JSON.parse(new TextDecoder().decode(files["version-manifest.json"])), version.manifest);
+    assert.deepEqual(JSON.parse(new TextDecoder().decode(files["design-specification.json"])), version.design);
+    await writeFile(join(base, "nested-export.zip"), exportZip(version));
+    await page.getByRole("button", {name:"Undo", exact:true}).click();
+    assert.notEqual(await page.getByLabel("Selected element text").inputValue(), copy);
+    await page.getByRole("button", {name:"Redo", exact:true}).click();
+    assert.equal(await page.getByLabel("Selected element text").inputValue(), copy);
+  });
+  await check("SG-002 scoped AI nested edit rejects unrelated model changes", async () => {
+    await workspace();
+    await page.getByRole("button", {name:"Service description", exact:true}).click();
+    const before = await page.evaluate(() => window.reviewSaved.versions.at(-1).design);
+    const response = structuredClone(before);
+    response.screens[0].description = "An unhurried fictional experience";
+    response.screens[1].title = "Unrelated model change";
+    response.screens[0].layout = "list";
+    response.tokens.accent = "#000000";
+    await page.evaluate(d => {window.reviewDesign = d}, response);
+    await page.locator("textarea").fill("Refine only the selected description");
+    await page.getByRole("button", {name:"Apply changes"}).click();
+    await page.waitForFunction(() => !!window.reviewComplete);
+    assert.equal((await page.evaluate(() => window.reviewPayload)).component, "description");
+    await page.evaluate(() => window.reviewComplete());
+    await page.getByRole("button", {name:"Accept design", exact:true}).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).manifest.source === "chatgpt");
+    const v = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    const expected = structuredClone(before); expected.screens[0].description = response.screens[0].description;
+    assert.deepEqual(v.design, expected);
+    assert.deepEqual(v.manifest.fields, ["description"]);
+    assert.equal(v.manifest.scope, "Service selection");
+    await writeFile(join(base,"scoped-nested-evidence.json"), JSON.stringify({before, modelResponse:response, accepted:v},null,2));
+  });
+  await check("SG-002 omitted nested role fails without changing accepted design", async () => {
+    await workspace();
+    await page.getByRole("button", {name:"Service description", exact:true}).click();
+    const before = await page.evaluate(() => JSON.stringify(window.reviewSaved.versions));
+    await page.locator("textarea").fill("Refine selected description");
+    await page.getByRole("button", {name:"Apply changes"}).click();
+    await page.waitForFunction(() => !!window.reviewComplete);
+    await page.evaluate(() => window.reviewComplete());
+    await page.getByRole("alert").filter({hasText:"omitted the selected text role"}).waitFor();
+    assert.equal(await page.evaluate(() => JSON.stringify(window.reviewSaved.versions)), before);
+  });
+  await check("SG-003 offline thumbnails, preview focus, stage/discard and authored provenance", async () => {
+    await workspace();
+    await page.locator("textarea").fill("My preserved draft");
+    const before = await page.evaluate(() => JSON.stringify(window.reviewSaved.versions));
+    assert.equal(await page.locator(".preset-thumb iframe").count(), 6);
+    for (let i=0;i<6;i++) await page.frameLocator(".preset-thumb iframe").nth(i).getByText("Demo Relaxation",{exact:true}).first().waitFor();
+    const calls = await page.evaluate(() => window.reviewCalls.filter(x=>x==="generate").length);
+    for (const name of ["Calm spa", "Clean clinic", "Modern boutique"]) {
+      const button = page.getByRole("button", {name:"Preview " + name, exact:true});
+      await button.click();
+      await page.getByRole("dialog", {name:"Authored style preview"}).waitFor();
+      assert.equal(await page.locator(".style-preview-screens iframe").count(),2);
+      await page.keyboard.press("Escape");
+      await page.getByRole("dialog", {name:"Authored style preview"}).waitFor({state:"detached"});
+      assert.equal(await button.evaluate(el=>el===document.activeElement), true);
+      assert.equal(await page.evaluate(() => JSON.stringify(window.reviewSaved.versions)), before);
+      assert.equal(await page.locator("textarea").inputValue(), "My preserved draft");
+    }
+    await page.getByRole("button", {name:"Apply Clean clinic style", exact:true}).click();
+    assert.equal(await page.evaluate(() => JSON.stringify(window.reviewSaved.versions)), before);
+    await page.getByRole("button", {name:"Discard proposal", exact:true}).click();
+    assert.equal(await page.evaluate(() => JSON.stringify(window.reviewSaved.versions)), before);
+    await page.getByRole("button", {name:"Apply Modern boutique style", exact:true}).click();
+    await page.getByRole("button", {name:"Accept design", exact:true}).click();
+    await page.waitForFunction(() => window.reviewSaved.versions.at(-1).design.style === "modern-boutique");
+    const v = await page.evaluate(() => window.reviewSaved.versions.at(-1));
+    assert.equal(v.manifest.source,"authored-preset");
+    assert.deepEqual(v.manifest.provenance,{type:"local-authored",id:"modern-boutique",revision:1});
+    assert.equal(await page.locator("textarea").inputValue(), "My preserved draft");
+    assert.equal(await page.evaluate(() => window.reviewCalls.filter(x=>x==="generate").length), calls);
+  });
+  await check("SG-001/003 all authored layouts fit 320/390/desktop and complete trusted walkthrough", async () => {
+    const {bookingHTML} = await import("../src/interactive.js");
+    const preview = await context.newPage();
+    preview.setDefaultTimeout(7000);
+    for (const width of [320,390,1200]) {
+      await page.setViewportSize({width,height:850});
+      await workspace();
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      for (const style of ["calm-spa","clean-clinic","modern-boutique"]) {
+        const design = authoredPreset(style);
+        for (const index of [0,1]) {
+          await preview.setViewportSize({width,height:850});
+          await preview.goto("about:blank");
+          await preview.setContent(screenHTML(design,index));
+          assert.ok(await preview.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+          const box = await preview.locator(".action").boundingBox(); assert.ok(box.height >=44);
+          await preview.screenshot({path:join(base, `${style}-screen${index}-${width}.png`)});
+        }
+        await preview.goto("about:blank");
+        await preview.setContent(bookingHTML(design));
+        for (let i=0;i<4;i++) {
+          if (i===2) {await preview.getByRole("button", {name:"14:15",exact:true}).focus(); await preview.keyboard.press("Enter");}
+          await preview.locator(".action").click();
+        }
+        await preview.getByRole("status").filter({hasText:"14:15"}).waitFor();
+        assert.ok((await preview.getByRole("status").innerText()).includes("no reservation created"));
+      }
+      await page.bringToFront();
+      await page.locator(".inspiration-grid").scrollIntoViewIfNeeded();
+      for (let i=0;i<6;i++) await page.frameLocator(".preset-thumb iframe").nth(i).getByText("Demo Relaxation",{exact:true}).first().waitFor();
+      await page.waitForTimeout(250);
+      await page.screenshot({path:join(base, `picker-${width}.png`),fullPage:true});
+      await page.locator(".inspiration-card").first().screenshot({path:join(base, `picker-card-${width}.png`)});
+    }
+    await preview.close(); await page.setViewportSize({width:1200,height:900});
+  });
+
+
+  await check("SG-001/002 accepted layout and nested copy survive reload", async () => {
+    await workspace();
+    await page.evaluate(() => {window.reviewPersist=true});
+    await page.getByLabel("Screen layout",{exact:true}).selectOption("list");
+    await page.getByRole("button",{name:"Service description",exact:true}).click();
+    await page.getByLabel("Selected element text").fill("A preserved fictional description");
+    await page.getByRole("button",{name:"Save direct edit",exact:true}).click();
+    await page.waitForFunction(()=>window.reviewSaved.versions.at(-1).design.screens[0].description==="A preserved fictional description");
+    const before = await page.evaluate(()=>JSON.stringify(window.reviewSaved));
+    await page.reload();
+    await page.getByRole("button",{name:"← Open local workspace"}).click();
+    await page.getByRole("button",{name:"Service description",exact:true}).click();
+    assert.equal(await page.getByLabel("Selected element text").inputValue(),"A preserved fictional description");
+    assert.equal(await page.getByLabel("Screen layout",{exact:true}).inputValue(),"list");
+    assert.equal(await page.evaluate(()=>JSON.stringify(window.reviewSaved)),before);
+    await page.evaluate(()=>sessionStorage.removeItem("sg-persist"));
+  });
+
   await context.close();
 } finally {
   await browser.close();

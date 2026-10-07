@@ -7,6 +7,10 @@ import {
   example,
   validateDesign,
   screenHTML,
+  layoutOptions,
+  nestedRoles,
+  authoredPreset,
+  styleDirections,
 } from "./design.js";
 import { DesignCanvas } from "./canvas.jsx";
 import { bookingHTML } from "./interactive.js";
@@ -90,20 +94,24 @@ function App() {
     [view, setView] = useState("canvas"),
     [element, setElement] = useState("action"),
     [proposal, setProposal] = useState(null),
-    [proposalScreen, setProposalScreen] = useState(0);
+    [proposalScreen, setProposalScreen] = useState(0),
+    [stylePreview, setStylePreview] = useState(null);
   const menuButton = useRef(),
     menuRoot = useRef(),
     referenceInput = useRef(),
     referenceRevision = useRef(0),
     referenceReader = useRef(),
     dialog = useRef(),
+    styleDialog = useRef(),
+    styleReturnFocus = useRef(),
     returnFocus = useRef(),
     sequence = useRef(0),
     draftRevision = useRef(0),
     saveQueue = useRef(Promise.resolve());
-  const selected = project.versions.find(
+  const savedSelection = project.versions.find(
     (v) => v.manifest.id === project.selected,
   );
+  const selected = savedSelection && { ...savedSelection, design: validateDesign(savedSelection.design) };
   const usable =
     connection.session?.sharing && models.some((m) => m.slug === model);
   useEffect(() => {
@@ -189,6 +197,13 @@ function App() {
     if (menu) menuRoot.current?.querySelector('[role="menuitem"]')?.focus();
   }, [menu]);
   useEffect(() => {
+    if (stylePreview) {
+      styleDialog.current?.showModal();
+      styleDialog.current?.querySelector("button")?.focus();
+    }
+    else styleReturnFocus.current?.focus();
+  }, [stylePreview]);
+  useEffect(() => {
     if (modal) {
       dialog.current?.showModal();
       dialog.current?.querySelector("button,input")?.focus();
@@ -270,6 +285,7 @@ function App() {
         parent,
         scope: metadata.scope || scope,
         source,
+        ...(metadata.provenance ? { provenance: metadata.provenance } : {}),
         validation: "validated schema and trusted preview templates",
         component: Object.hasOwn(metadata, "component") ? metadata.component : element,
         ...(metadata.fields ? { fields: metadata.fields } : {}),
@@ -299,6 +315,8 @@ function App() {
     setMessage(
       source === "sample"
         ? "Loaded an authored sample. No AI request was made."
+        : source === "authored-preset"
+          ? "Accepted a local authored preset. No AI request was made."
         : source === "manual"
           ? "Saved direct edit as a new version. No AI request was made."
           : "Generation completed and specification validated.",
@@ -321,7 +339,9 @@ function App() {
       if (r.connection) setConnection(r.connection);
       let text = r.text.trim();
       text = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-      let d = validateDesign(JSON.parse(text));
+      const raw = JSON.parse(text);
+      if (selected && scope !== "All screens" && Object.hasOwn(nestedRoles[screens.indexOf(scope)], element) && !Object.hasOwn(raw.screens?.[screens.indexOf(scope)] || {}, element)) throw Error("The model omitted the selected text role. Please retry.");
+      let d = validateDesign(raw);
       if (selected && scope !== "All screens") {
         const i = screens.indexOf(scope);
         d = {
@@ -345,6 +365,7 @@ function App() {
         design: d,
         scope,
         component: scope === "All screens" ? null : element,
+        fields: scope === "All screens" ? ["screens", "tokens"] : [element, ...(element === "action" ? ["actionPadding"] : [])].filter(key => d.screens[screens.indexOf(scope)][key] !== selected?.design.screens[screens.indexOf(scope)][key]),
         parent: selected?.manifest.id || null,
         submittedRevision,
         operation,
@@ -734,7 +755,7 @@ function App() {
               <>
                 <div className="result-heading">
                   <p>
-                    {selected.manifest.source === "sample"
+                    {["sample", "authored-preset"].includes(selected.manifest.source)
                       ? "Authored sample · no AI generation"
                       : selected.manifest.source === "manual"
                         ? "Direct edit · no AI generation"
@@ -803,6 +824,21 @@ function App() {
                   <h2>
                     Edit {screens[screen]} · {element}
                   </h2>
+                  <label className="layout-inspector">
+                    Screen layout
+                    <select aria-label="Screen layout" value={selected.design.screens[screen].layout} disabled={!!busy}
+                      onChange={e => {
+                        invalidateGeneration();
+                        const d = structuredClone(selected.design);
+                        d.screens[screen].layout = e.target.value;
+                        accept(validateDesign(d), "manual", selected.manifest.id, null, { scope: screens[screen], component: "layout", fields: ["layout"] });
+                      }}>
+                      {Object.entries(layoutOptions[screen]).map(([id, label]) => <option value={id} key={id}>{label}</option>)}
+                    </select>
+                  </label>
+                  <div className="nested-role-controls" aria-label="Component text roles">
+                    {Object.entries(nestedRoles[screen]).map(([key, label]) => <button key={key} aria-pressed={element === key} onClick={() => { invalidateGeneration(); setElement(key); setScope(screens[screen]); }}>{label}</button>)}
+                  </div>
                   <form
                     key={selected.manifest.id + screen + element}
                     onSubmit={(e) => {
@@ -811,13 +847,12 @@ function App() {
                       const f = new FormData(e.currentTarget),
                         d = structuredClone(selected.design);
                       d.screens[screen][element] = String(f.get("copy"));
-                      d.screens[screen].actionPadding = Number(
-                        f.get("padding"),
-                      );
+                      if (element === "action") d.screens[screen].actionPadding = Number(f.get("padding"));
                       if (scope === "All screens")
                         d.tokens.accent = String(f.get("accent"));
                       const sharedChanged = d.tokens.accent !== selected.design.tokens.accent;
-                      const fields = [element, "actionPadding", ...(sharedChanged ? ["tokens.accent"] : [])];
+                      const fields = [element, ...(element === "action" ? ["actionPadding"] : [])].filter(key => d.screens[screen][key] !== selected.design.screens[screen][key]);
+                      if (sharedChanged) fields.push("tokens.accent");
                       accept(validateDesign(d), "manual", selected.manifest.id, null, { scope: sharedChanged ? "All screens" : screens[screen], component: element, fields });
                     }}
                   >
@@ -830,7 +865,7 @@ function App() {
                         required
                       />
                     </label>
-                    <label>
+                    {element === "action" && <label>
                       Button padding
                       <input
                         name="padding"
@@ -841,7 +876,7 @@ function App() {
                           selected.design.screens[screen].actionPadding || 17
                         }
                       />
-                    </label>
+                    </label>}
                     <label>
                       Shared accent (All screens scope)
                       <input
@@ -916,10 +951,10 @@ function App() {
                     }
                     accept(
                       proposal.design,
-                      "chatgpt",
+                      proposal.source || "chatgpt",
                       proposal.parent,
                       proposal.submittedRevision,
-                      { scope: proposal.scope, component: proposal.component },
+                      { scope: proposal.scope, component: proposal.component, fields: proposal.fields, ...(proposal.provenance ? { provenance: proposal.provenance } : {}) },
                     );
                     setProposal(null);
                   }}
@@ -941,7 +976,11 @@ function App() {
                 {Object.entries(styles).map(([k, v]) => (
                   <div className={"inspiration-card " + k} key={k}>
                     <h2>{v} booking</h2>
-                    <p>A treatment-booking starting point with five screens.</p>
+                    <p>{styleDirections[k]}</p>
+                    <div className="preset-thumbnails">
+                      {[0, 1].map(i => <div className="preset-thumb" key={i}><iframe sandbox="" tabIndex={-1} title={v + " " + screens[i] + " thumbnail"} srcDoc={screenHTML(authoredPreset(k), i)} /></div>)}
+                    </div>
+                    <button onClick={e => { styleReturnFocus.current = e.currentTarget; setStylePreview(k); }}>Preview {v}</button>
                     <button
                       onClick={() => {
                         update({
@@ -955,11 +994,13 @@ function App() {
                     </button>
                     <button
                       onClick={() => {
-                        accept(sample(k), "sample");
-                        update({ style: k });
+                        invalidateGeneration();
+                        setProposalScreen(0);
+                        setProposal({ design: authoredPreset(k), scope: "All screens", component: null, fields: ["screens", "tokens"], parent: selected?.manifest.id || null, operation: sequence.current, source: "authored-preset", provenance: { type: "local-authored", id: k, revision: 1 } });
+                        setMessage("Authored style staged. Review all five screens, then accept or discard. No AI request was made.");
                       }}
                     >
-                      Load sample
+                      Apply {v} style
                     </button>
                   </div>
                 ))}
@@ -990,6 +1031,11 @@ function App() {
           ? "Personal local design tool · synthetic bookings · uses your authorized ChatGPT allowance"
           : "Local design prototype · synthetic bookings · connection pending licensing/eligibility"}
       </footer>
+      {stylePreview && <dialog ref={styleDialog} className="style-preview-overlay" aria-label="Authored style preview" onCancel={e => { e.preventDefault(); setStylePreview(null); }}>
+        <h2>{styles[stylePreview]}</h2><p>{styleDirections[stylePreview]}</p>
+        <div className="style-preview-screens">{[0, 1].map(i => <iframe key={i} sandbox="" tabIndex={-1} title={screens[i] + " authored style preview"} srcDoc={screenHTML(authoredPreset(stylePreview), i)} />)}</div>
+        <button autoFocus onClick={() => setStylePreview(null)}>Close style preview</button>
+      </dialog>}
       <dialog
         ref={dialog}
         aria-labelledby="studio-dialog-title"

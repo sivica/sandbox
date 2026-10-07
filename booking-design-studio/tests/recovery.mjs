@@ -86,9 +86,10 @@ try {
   await page.goto(origin);
   await page.getByRole("button", { name: "← Open local workspace" }).click();
   await page
-    .getByRole("button", { name: "Load sample", exact: true })
+    .getByRole("button", { name: "Apply Calm spa style", exact: true })
     .first()
     .click();
+  await page.getByRole("button", { name: "Accept design", exact: true }).click();
   const frameHandle = await page
     .locator(".gallery iframe")
     .first()

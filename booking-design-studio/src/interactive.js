@@ -28,14 +28,14 @@ export function bookingHTML(design, start = 0) {
         '<template id="screen-' +
         i +
         '">' +
-        screenHTML(d, i).match(/<body>([\s\S]*?)<\/body>/)[1] +
+        screenHTML(d, i).match(/<body[^>]*>([\s\S]*?)<\/body>/)[1] +
         "</template>",
     )
     .join("");
   return (
     '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; script-src \'nonce-kindred-trusted-preview\'; form-action \'none\'; base-uri \'none\'"><style>' +
     css +
-    " button{font:inherit;cursor:pointer;border:1px solid var(--line,#ddd)}.action{width:100%;display:block}.slots button{padding:13px;border-radius:10px}.slots button[aria-pressed=true]{outline:3px solid " +
+    " button{font:inherit;cursor:pointer;border:1px solid " + d.tokens.accent + "}.action{width:100%;display:block}.slots button{padding:13px;border-radius:10px}.slots button[aria-pressed=true]{outline:3px solid " +
     d.tokens.accent +
     '}</style></head><body data-start="' +
     Math.max(0, Math.min(4, start)) +
